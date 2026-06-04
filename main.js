@@ -235,8 +235,20 @@ function applyConfig(cfg) {
         const tl = cards[i].querySelector('.tracklist');
         if (tl) tl.innerHTML = alb.tracks.split('\n').filter(Boolean).map((t,j)=>`<li><span>${String(j+1).padStart(2,'0')}</span><span>${t}</span></li>`).join('');
       }
-      const dl = cards[i].querySelector('.btn-primary'); if (dl && alb.downloadLink) dl.href = alb.downloadLink;
-      const st = cards[i].querySelector('.btn-ghost'); if (st && alb.streamLink) st.href = alb.streamLink;
+      // Download button
+      const dl = cards[i].querySelector('.btn-primary');
+      if (dl) {
+        if (alb.downloadLink) dl.href = alb.downloadLink;
+        if (alb.downloadBtnLabel) dl.textContent = alb.downloadBtnLabel;
+        dl.style.display = alb.showDownloadBtn === false ? 'none' : '';
+      }
+      // Stream button
+      const st = cards[i].querySelector('.btn-ghost');
+      if (st) {
+        if (alb.streamLink) st.href = alb.streamLink;
+        if (alb.streamBtnLabel) st.textContent = alb.streamBtnLabel;
+        st.style.display = alb.showStreamBtn === false ? 'none' : '';
+      }
       if (alb.artUrl) { const artEl = cards[i].querySelector('.album-art'); if (artEl) artEl.innerHTML = `<img src="${alb.artUrl}" alt="Album Art">`; }
     });
   }

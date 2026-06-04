@@ -805,12 +805,42 @@ function renderAlbumsAdmin() {
         <div class="field" style="margin:0"><label>Album Art — upload</label><input type="file" accept="image/*" data-alb-art="${i}"></div>
         <div class="field" style="margin:0"><label>Album Art — URL</label><input type="url" value="${esc(alb.artUrl||'')}" placeholder="https://..." data-alb="${i}" data-f="artUrl"></div>
       </div>
+
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:.7rem">Button Controls</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+
+          <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.8rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:.78rem;color:var(--off)">Download Button</span>
+              <label class="toggle-switch" style="width:36px;height:20px">
+                <input type="checkbox" data-alb="${i}" data-f="showDownloadBtn" ${alb.showDownloadBtn === false ? '' : 'checked'}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field" style="margin:0"><label>Button Label</label><input type="text" value="${esc(alb.downloadBtnLabel||'↓ Free Download')}" placeholder="↓ Free Download" data-alb="${i}" data-f="downloadBtnLabel"></div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.8rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:.78rem;color:var(--off)">Stream Button</span>
+              <label class="toggle-switch" style="width:36px;height:20px">
+                <input type="checkbox" data-alb="${i}" data-f="showStreamBtn" ${alb.showStreamBtn === false ? '' : 'checked'}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field" style="margin:0"><label>Button Label</label><input type="text" value="${esc(alb.streamBtnLabel||'Stream on Spotify')}" placeholder="Stream on Spotify" data-alb="${i}" data-f="streamBtnLabel"></div>
+          </div>
+
+        </div>
+      </div>
     </div>
   `).join('') || '<p style="font-size:.82rem;color:var(--dim)">No albums yet.</p>';
 
   list.querySelectorAll('[data-alb][data-f]').forEach(input => {
-    input.addEventListener('input', () => {
-      albums[parseInt(input.dataset.alb)][input.dataset.f] = input.value;
+    const evt = input.type === 'checkbox' ? 'change' : 'input';
+    input.addEventListener(evt, () => {
+      albums[parseInt(input.dataset.alb)][input.dataset.f] = input.type === 'checkbox' ? input.checked : input.value;
       if (input.dataset.f === 'title') {
         const el = input.closest('.album-admin-item')?.querySelector('.album-admin-name');
         if (el) el.textContent = input.value || 'Untitled';
