@@ -513,6 +513,10 @@
     const navLinks   = document.getElementById('navLinks');
     const navOverlay = document.getElementById('navOverlay');
 
+    // Mark as bound so main.js skips rebinding (prevents open/close double-fire)
+    if (navToggle)  navToggle.dataset.bound  = '1';
+    if (navOverlay) navOverlay.dataset.bound = '1';
+
     function openNav()  { navLinks.classList.add('open');  navOverlay.classList.add('open');  document.body.style.overflow='hidden'; navToggle.textContent='✕'; }
     function closeNav() { navLinks.classList.remove('open'); navOverlay.classList.remove('open'); document.body.style.overflow=''; navToggle.textContent='☰'; }
 
@@ -525,8 +529,7 @@
     const ph  = document.getElementById('heroPlaceholder');
     if (vid) {
       vid.addEventListener('canplay', () => { if (ph) ph.style.display = 'none'; });
-      // If no source or source fails, placeholder stays visible
-      vid.addEventListener('error', () => { if (ph) ph.style.display = 'flex'; });
+      vid.addEventListener('error',   () => { if (ph) ph.style.display = 'flex'; });
     }
 
     // ── Reveal animations ──
