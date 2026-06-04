@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Events — HARSHID</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,700;0,900;1,700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <nav class="main-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" id="siteLogo">HARSHID</a>
+      <button class="nav-toggle" id="navToggle">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="music.html">Music</a></li>
+        <li><a href="events.html" class="active">Events</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="epk.html">EPK</a></li>
+        <li><a href="bio.html">Bio</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <span class="ph-label">Live Performances</span>
+    <h1>Events</h1>
+    <p class="ph-sub">Catch Harshid live — click an event to see more</p>
+  </div>
+
+  <div class="section-wrap">
+    <span class="section-label">Upcoming Shows</span>
+    <div class="events-list" id="upcomingEventsList">
+
+      <div class="event-card fade-in" data-target="ev0">
+        <div class="event-date-block">
+          <div class="event-day">14</div>
+          <div class="event-month">Aug 2025</div>
+        </div>
+        <div class="event-info">
+          <h3>Summer Fusion Night</h3>
+          <div class="event-venue">The Electric Ballroom</div>
+          <div class="event-location">📍 Mumbai, India</div>
+        </div>
+        <div class="event-photo-placeholder">🎤</div>
+        <span class="event-toggle-icon">+</span>
+      </div>
+      <div class="event-expanded" id="ev0">
+        <p>An electrifying night blending Bollywood vibes with deep electronic beats. Come early — doors open at 8 PM.</p>
+        <a href="#" class="btn-primary" style="display:inline-block;margin-bottom:1.5rem">Get Tickets</a>
+        <div class="event-expanded-inner">
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Event Photo</span></div>
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Event Photo</span></div>
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Event Photo</span></div>
+        </div>
+      </div>
+
+      <div class="event-card fade-in" data-target="ev1">
+        <div class="event-date-block">
+          <div class="event-day">22</div>
+          <div class="event-month">Sep 2025</div>
+        </div>
+        <div class="event-info">
+          <h3>Desi Beats Festival</h3>
+          <div class="event-venue">Phoenix Grounds</div>
+          <div class="event-location">📍 Bangalore, India</div>
+        </div>
+        <div class="event-photo-placeholder">🎤</div>
+        <span class="event-toggle-icon">+</span>
+      </div>
+      <div class="event-expanded" id="ev1">
+        <p>A full-day festival celebrating the fusion of traditional South Asian sounds with modern electronic production. Harshid takes the main stage at 9 PM.</p>
+        <a href="#" class="btn-primary" style="display:inline-block;margin-bottom:1.5rem">Get Tickets</a>
+        <div class="event-expanded-inner">
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Event Photo</span></div>
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Event Photo</span></div>
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Event Photo</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <br><br>
+    <span class="section-label">Past Shows</span>
+    <div class="events-list" id="pastEventsList">
+
+      <div class="event-card fade-in" data-target="pev0" style="opacity:0.7">
+        <div class="event-date-block">
+          <div class="event-day">03</div>
+          <div class="event-month">Mar 2025</div>
+        </div>
+        <div class="event-info">
+          <h3>Electric Bollywood — Live Set</h3>
+          <div class="event-venue">Blue Frog</div>
+          <div class="event-location">📍 Mumbai, India</div>
+        </div>
+        <div class="event-photo-placeholder">📸</div>
+        <span class="event-toggle-icon">+</span>
+      </div>
+      <div class="event-expanded" id="pev0">
+        <p>Sold-out show at Blue Frog. An unforgettable night — thank you Mumbai.</p>
+        <div class="event-expanded-inner">
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Show Photos</span></div>
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Show Photos</span></div>
+          <div class="event-photo-placeholder-lg"><span>📷</span><span style="font-size:.7rem;margin-top:.3rem">Add Show Photos</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="main-footer">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-logo" id="footerLogo">HARSHID</a>
+      <div class="footer-links">
+        <a href="#" id="fl-instagram">Instagram</a>
+        <a href="#" id="fl-spotify">Spotify</a>
+        <a href="#" id="fl-youtube">YouTube</a>
+        <a href="#" id="fl-soundcloud">SoundCloud</a>
+      </div>
+      <p class="footer-copy" id="footerCopy">© 2025 Harshid. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
