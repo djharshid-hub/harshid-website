@@ -43,14 +43,18 @@ const navOverlay = $('#navOverlay');
 function openNav()  {
   if (navLinks)   navLinks.classList.add('open');
   if (navOverlay) navOverlay.classList.add('open');
+  const nav = document.querySelector('nav.main-nav');
+  if (nav) nav.classList.add('nav-open');
   document.body.style.overflow = 'hidden';
-  if (navToggle)  navToggle.textContent = '✕';
+  if (navToggle)  { navToggle.textContent = '✕'; navToggle.style.zIndex = '1102'; }
 }
 function closeNav() {
   if (navLinks)   navLinks.classList.remove('open');
   if (navOverlay) navOverlay.classList.remove('open');
+  const nav = document.querySelector('nav.main-nav');
+  if (nav) nav.classList.remove('nav-open');
   document.body.style.overflow = '';
-  if (navToggle)  navToggle.textContent = '☰';
+  if (navToggle)  { navToggle.textContent = '☰'; navToggle.style.zIndex = ''; }
 }
 
 // Only bind nav in main.js if index.html hasn't already bound it (index has inline script)
