@@ -260,7 +260,7 @@ footer.main-footer {
 /* ══════════════════════════════
    EVENTS PAGE
 ══════════════════════════════ */
-.events-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; align-items: start; }
+.events-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; align-items: stretch; }
 
 /* Each event is a vertical card with the poster on top */
 .event-card {
@@ -268,13 +268,12 @@ footer.main-footer {
   background: linear-gradient(145deg, var(--dark2), var(--dark3));
   border: 1px solid var(--border); border-radius: var(--r-md);
   overflow: hidden; margin-bottom: 0;
-  cursor: pointer; transition: border-color .3s, box-shadow .3s, transform .2s;
+  cursor: default; transition: border-color .3s, box-shadow .3s, transform .2s;
 }
-.event-card:hover { border-color: rgba(0,212,255,0.3); box-shadow: 0 8px 40px rgba(26,106,255,0.15); transform: translateY(-2px); }
-.event-card.expanded-open { border-color: var(--cyan); border-bottom-left-radius: 0; border-bottom-right-radius: 0; transform: none; }
-.event-card.past-event-card { opacity: .75; }
-.event-card.past-event-card.no-expand { cursor: default; }
-.event-card.past-event-card.no-expand:hover { border-color: var(--border); box-shadow: none; transform: none; }
+.event-card.upcoming-card { cursor: default; }
+.event-card.upcoming-card:hover { border-color: rgba(0,212,255,0.3); box-shadow: 0 8px 40px rgba(26,106,255,0.15); transform: translateY(-2px); }
+.event-card.past-event-card { opacity: .72; cursor: default; }
+.event-card.past-event-card:hover { border-color: var(--border); box-shadow: none; transform: none; }
 
 /* Large 4:5 poster (Instagram post ratio) — always on top */
 .event-poster-thumb {
@@ -289,16 +288,17 @@ footer.main-footer {
 .event-poster-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .event-poster-emoji { font-size: 3.5rem; opacity: 0.5; }
 
-/* Card info row */
+/* Card info row — grows to fill available space */
 .event-card-body {
   display: flex; align-items: center; gap: .9rem;
   padding: 1rem 1.2rem;
   flex: 1;
 }
 
-/* Ticket button footer — only on upcoming cards */
+/* Ticket button pinned to bottom of card */
 .event-card-footer {
   padding: 0 1.2rem 1.2rem;
+  margin-top: auto;
 }
 .event-ticket-btn {
   display: block;
@@ -306,34 +306,15 @@ footer.main-footer {
   width: 100%;
 }
 
-/* Past cards — static, no hover effect */
-.event-card.past-event-card {
-  opacity: .72;
-  cursor: default;
-}
-.event-card.past-event-card:hover {
-  border-color: var(--border);
-  box-shadow: none;
-  transform: none;
-}
-
-.event-date-block {
-  text-align: center; flex-shrink: 0;
-}
-.event-day {
-  font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1; color: var(--white);
-}
+.event-date-block { text-align: center; flex-shrink: 0; }
+.event-day { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1; color: var(--white); }
 .event-month {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.6rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--cyan);
 }
-.event-info {
-  flex: 1;
-}
-.event-info h3 {
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; letter-spacing: 0.04em;
-}
+.event-info { flex: 1; }
+.event-info h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; letter-spacing: 0.04em; }
 .event-venue {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
@@ -344,6 +325,13 @@ footer.main-footer {
   font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
   color: var(--dim); margin-top: .2rem;
 }
+.event-photo-placeholder-lg {
+  aspect-ratio: 4/3; border-radius: var(--r-md);
+  background: rgba(26,106,255,0.06); border: 1px dashed rgba(26,106,255,0.25);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .5rem; font-size: 0.7rem; color: var(--dim); overflow: hidden;
+}
+.event-photo-placeholder-lg img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--r-md); }
 
 /* ══════════════════════════════
    GALLERY PAGE
