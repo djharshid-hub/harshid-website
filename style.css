@@ -289,17 +289,36 @@ footer.main-footer {
 .event-poster-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .event-poster-emoji { font-size: 3.5rem; opacity: 0.5; }
 
-/* Card bottom info row */
+/* Card info row */
 .event-card-body {
   display: flex; align-items: center; gap: .9rem;
   padding: 1rem 1.2rem;
+  flex: 1;
 }
 
-/* Since the HTML uses the old flat layout, we use CSS to fake the body area */
-/* The date block, info, and toggle sit in a flex row below the poster */
+/* Ticket button footer — only on upcoming cards */
+.event-card-footer {
+  padding: 0 1.2rem 1.2rem;
+}
+.event-ticket-btn {
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+/* Past cards — static, no hover effect */
+.event-card.past-event-card {
+  opacity: .72;
+  cursor: default;
+}
+.event-card.past-event-card:hover {
+  border-color: var(--border);
+  box-shadow: none;
+  transform: none;
+}
+
 .event-date-block {
   text-align: center; flex-shrink: 0;
-  padding: 1rem 0 1rem 1.2rem;
 }
 .event-day {
   font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1; color: var(--white);
@@ -310,7 +329,7 @@ footer.main-footer {
   color: var(--cyan);
 }
 .event-info {
-  flex: 1; padding: 1rem .6rem 1rem 0;
+  flex: 1;
 }
 .event-info h3 {
   font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; letter-spacing: 0.04em;
@@ -325,36 +344,6 @@ footer.main-footer {
   font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
   color: var(--dim); margin-top: .2rem;
 }
-/* hide old photo placeholder — replaced by poster-thumb */
-.event-photo-placeholder { display: none; }
-.event-toggle-icon {
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--blue);
-  transition: transform .3s; text-align: center;
-  padding: 1rem 1.2rem 1rem 0; flex-shrink: 0; align-self: center;
-}
-.event-toggle-icon.past-toggle { color: var(--dim); }
-.event-card.expanded-open .event-toggle-icon { transform: rotate(45deg); color: var(--cyan); }
-
-/* Expanded panel — full width below the card grid via wrapper trick */
-.event-expanded {
-  display: none; background: rgba(11,14,22,0.9);
-  border: 1px solid var(--cyan); border-top: none;
-  border-radius: 0 0 var(--r-md) var(--r-md);
-  padding: 1.5rem 2rem;
-  /* Span full grid width */
-  grid-column: 1 / -1;
-  margin-top: -.4rem;
-}
-.event-expanded.open { display: block; }
-.event-expanded p { font-size: 0.92rem; line-height: 1.8; color: var(--off); margin-bottom: 1.2rem; }
-.event-expanded-inner { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
-.event-photo-placeholder-lg {
-  aspect-ratio: 4/3; border-radius: var(--r-md);
-  background: rgba(26,106,255,0.06); border: 1px dashed rgba(26,106,255,0.25);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: .5rem; font-size: 0.7rem; color: var(--dim); overflow: hidden;
-}
-.event-photo-placeholder-lg img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--r-md); }
 
 /* ══════════════════════════════
    GALLERY PAGE
