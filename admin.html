@@ -514,7 +514,7 @@ const HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'A
 
 // ── SUPABASE HELPERS ─────────────────────────────────────────
 async function dbGet(key) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.${encodeURIComponent(key)}&select=value`, { headers: HEADERS });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.${encodeURIComponent(key)}&select=value&order=id.desc&limit=1`, { headers: HEADERS });
   const d = await r.json();
   if (!d.length) return null;
   try { return JSON.parse(d[0].value); } catch { return d[0].value; }
@@ -522,9 +522,15 @@ async function dbGet(key) {
 
 async function dbSet(key, value) {
   const body = JSON.stringify({ key, value: JSON.stringify(value) });
+  // Delete any existing rows for this key first, then insert fresh
+  // This guarantees a single row per key regardless of unique constraint
+  await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.${encodeURIComponent(key)}`, {
+    method: 'DELETE',
+    headers: HEADERS,
+  });
   await fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
     method: 'POST',
-    headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+    headers: { ...HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
     body
   });
 }

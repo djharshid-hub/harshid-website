@@ -14,7 +14,7 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
 async function dbGet(key) {
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.${encodeURIComponent(key)}&select=value`, { headers: HEADERS });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.${encodeURIComponent(key)}&select=value&order=id.desc&limit=1`, { headers: HEADERS });
     const d = await r.json();
     if (!d.length) return null;
     return JSON.parse(d[0].value);
