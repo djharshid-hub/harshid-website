@@ -95,6 +95,15 @@
 
     .delete-btn { background: rgba(255,51,85,.12); border: 1px solid rgba(255,51,85,.25); border-radius: 6px; color: #ff3355; font-size: .75rem; padding: .3rem .7rem; cursor: pointer; transition: all .2s; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em; }
     .delete-btn:hover { background: rgba(255,51,85,.25); }
+
+    /* drag-to-reorder */
+    .event-admin-item { cursor: default; transition: opacity .15s, box-shadow .15s; }
+    .event-admin-item[draggable="true"] { cursor: grab; }
+    .event-admin-item.dragging { opacity: .4; box-shadow: 0 0 0 2px var(--blue); }
+    .event-admin-item.drag-over { box-shadow: 0 -3px 0 0 var(--cyan); }
+    .drag-handle { cursor: grab; color: var(--dim); font-size: 1rem; padding: 0 .4rem; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    .event-poster-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
     .add-btn { background: rgba(26,106,255,.12); border: 1px solid rgba(26,106,255,.3); border-radius: 8px; color: var(--blue); font-family: 'Barlow Condensed', sans-serif; font-size: .85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: .6rem 1.2rem; cursor: pointer; margin-top: .5rem; transition: all .2s; }
     .add-btn:hover { background: rgba(26,106,255,.2); }
 
@@ -289,11 +298,20 @@
       <!-- ══ EVENTS ══ -->
       <div class="admin-section" id="tab-events">
         <div class="section-heading">Events</div>
-        <div class="sub-heading">Upcoming Shows</div>
+
+        <div class="toggle-row" style="margin-bottom:1.5rem">
+          <div>
+            <div class="toggle-row-label">Enable Past Shows expand (show photos on click)</div>
+            <div style="font-size:.72rem;color:var(--dim);margin-top:.15rem">When OFF, past shows are plain non-clickable cards</div>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="pastExpandToggle" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="sub-heading">Upcoming Shows <span style="font-size:.7rem;color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">— drag ⠿ to reorder</span></div>
         <div id="upcomingEventsList"></div>
         <button class="add-btn" id="addUpcomingBtn">+ Add Upcoming Show</button>
         <hr class="divider">
-        <div class="sub-heading">Past Shows</div>
+        <div class="sub-heading">Past Shows <span style="font-size:.7rem;color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">— drag ⠿ to reorder</span></div>
         <div id="pastEventsList"></div>
         <button class="add-btn" id="addPastBtn">+ Add Past Show</button>
       </div>
@@ -309,7 +327,6 @@
             <select id="galleryNewCat">
               <option value="live">Live Shows</option>
               <option value="studio">Studio</option>
-              <option value="promo">Promo</option>
             </select>
           </div>
         </div>
@@ -430,6 +447,10 @@
           <div><div class="hide-item-label">Past Shows section</div><div class="hide-item-page">events.html</div></div>
           <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showPastEvents" checked><span class="toggle-slider"></span></label>
         </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Past Shows — expand to show photos</div><div class="hide-item-page">events.html — toggle click-to-expand on past events</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="pastExpandEnabled" checked><span class="toggle-slider"></span></label>
+        </div>
 
         <div class="sub-heading">Gallery Page</div>
         <div class="hide-item">
@@ -517,8 +538,8 @@ async function dbSaveEvents(upcoming, past) {
   // Delete all then reinsert
   await fetch(`${SUPABASE_URL}/rest/v1/events?id=gt.0`, { method: 'DELETE', headers: HEADERS });
   const rows = [
-    ...upcoming.map((ev, i) => ({ type: 'upcoming', name: ev.name||'', day: ev.day||'', month: ev.month||'', venue: ev.venue||'', location: ev.location||'', description: ev.desc||'', ticket_link: ev.ticketLink||'', sort_order: i })),
-    ...past.map((ev, i) => ({ type: 'past', name: ev.name||'', day: ev.day||'', month: ev.month||'', venue: ev.venue||'', location: ev.location||'', description: ev.desc||'', ticket_link: '', sort_order: i })),
+    ...upcoming.map((ev, i) => ({ type: 'upcoming', name: ev.name||'', day: ev.day||'', month: ev.month||'', venue: ev.venue||'', location: ev.location||'', description: ev.desc||'', ticket_link: ev.ticketLink||'', sort_order: i, poster_url: ev.posterUrl||'' })),
+    ...past.map((ev, i) => ({ type: 'past', name: ev.name||'', day: ev.day||'', month: ev.month||'', venue: ev.venue||'', location: ev.location||'', description: ev.desc||'', ticket_link: '', sort_order: i, poster_url: ev.posterUrl||'' })),
   ];
   if (!rows.length) return;
   await fetch(`${SUPABASE_URL}/rest/v1/events`, { method: 'POST', headers: { ...HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(rows) });
@@ -605,8 +626,8 @@ async function initAdminPanel() {
 
   // Load events
   const evRows = await dbGetEvents();
-  upcomingEvents = evRows.filter(e => e.type === 'upcoming').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, ticketLink: e.ticket_link }));
-  pastEvents     = evRows.filter(e => e.type === 'past').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description }));
+  upcomingEvents = evRows.filter(e => e.type === 'upcoming').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, ticketLink: e.ticket_link, posterUrl: e.poster_url||'' }));
+  pastEvents     = evRows.filter(e => e.type === 'past').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, posterUrl: e.poster_url||'' }));
   if (!upcomingEvents.length) upcomingEvents = defaultUpcoming();
   if (!pastEvents.length)     pastEvents     = defaultPast();
 
@@ -618,6 +639,9 @@ async function initAdminPanel() {
   albums = cfg.albums || defaultAlbums();
 
   loadFields(cfg);
+  // Load pastExpand toggle
+  const pastExpandEl = document.getElementById('pastExpandToggle');
+  if (pastExpandEl && cfg.pastExpandEnabled !== undefined) pastExpandEl.checked = cfg.pastExpandEnabled;
   renderAlbumsAdmin();
   renderEventsAdmin();
   renderGalleryAdmin();
@@ -699,11 +723,11 @@ function bindActions() {
   });
 
   document.getElementById('addUpcomingBtn')?.addEventListener('click', () => {
-    upcomingEvents.push({ name: 'New Event', day: '01', month: 'Jan 2026', venue: '', location: '', desc: '', ticketLink: '' });
+    upcomingEvents.push({ name: 'New Event', day: '01', month: 'Jan 2026', venue: '', location: '', desc: '', ticketLink: '', posterUrl: '' });
     renderEventsAdmin();
   });
   document.getElementById('addPastBtn')?.addEventListener('click', () => {
-    pastEvents.push({ name: 'Past Event', day: '01', month: 'Jan 2025', venue: '', location: '', desc: '' });
+    pastEvents.push({ name: 'Past Event', day: '01', month: 'Jan 2025', venue: '', location: '', desc: '', posterUrl: '' });
     renderEventsAdmin();
   });
 
@@ -812,6 +836,10 @@ async function saveAll() {
 
   cfg.albums = albums;
   cfg.visToggles = visToggles;
+
+  // Past expand toggle
+  const pastExpandEl = document.getElementById('pastExpandToggle');
+  if (pastExpandEl) cfg.pastExpandEnabled = pastExpandEl.checked;
 
   try {
     await Promise.all([
@@ -934,8 +962,9 @@ function renderEventsAdmin() {
   if (!upList || !pastList) return;
 
   const renderList = (events, type) => events.map((ev, i) => `
-    <div class="event-admin-item">
+    <div class="event-admin-item" draggable="true" data-type="${type}" data-index="${i}">
       <div class="event-admin-header">
+        <span class="drag-handle" title="Drag to reorder">⠿⠿</span>
         <span class="event-admin-name">${esc(ev.name || 'Event')}</span>
         <button class="delete-btn" data-type="${type}" data-index="${i}">🗑 Delete</button>
       </div>
@@ -947,6 +976,24 @@ function renderEventsAdmin() {
         <div class="field" style="margin:0;grid-column:1/-1"><label>Location</label><input type="text" value="${esc(ev.location||'')}" placeholder="📍 Vancouver, Canada" data-ev="${type}" data-i="${i}" data-f="location"></div>
         <div class="field" style="margin:0;grid-column:1/-1"><label>Description</label><textarea data-ev="${type}" data-i="${i}" data-f="desc">${esc(ev.desc||'')}</textarea></div>
         ${type==='upcoming' ? `<div class="field" style="margin:0;grid-column:1/-1"><label>Ticket Link</label><input type="url" value="${esc(ev.ticketLink||'')}" placeholder="https://..." data-ev="${type}" data-i="${i}" data-f="ticketLink"></div>` : ''}
+        <div class="field" style="margin:0;grid-column:1/-1">
+          <label>Event Poster / Thumbnail</label>
+          <div style="display:flex;align-items:center;gap:.8rem;flex-wrap:wrap">
+            ${ev.posterUrl ? `<img src="${esc(ev.posterUrl)}" class="event-poster-preview" alt="poster">` : ''}
+            <input type="file" accept="image/*" data-ev-poster="${type}" data-pi="${i}" style="flex:1;min-width:0">
+          </div>
+          <div class="field" style="margin:.4rem 0 0"><label>Or paste poster URL</label><input type="url" value="${esc(ev.posterUrl||'')}" placeholder="https://..." data-ev="${type}" data-i="${i}" data-f="posterUrl"></div>
+        </div>
+        ${type==='past' ? `
+        <div class="field" style="margin:0;grid-column:1/-1">
+          <label>Show Photos (add up to 3 photo URLs)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+            <input type="url" value="${esc((ev.photos||[])[0]||'')}" placeholder="Photo 1 URL" data-ev="${type}" data-i="${i}" data-f="photo0">
+            <input type="url" value="${esc((ev.photos||[])[1]||'')}" placeholder="Photo 2 URL" data-ev="${type}" data-i="${i}" data-f="photo1">
+            <input type="url" value="${esc((ev.photos||[])[2]||'')}" placeholder="Photo 3 URL" data-ev="${type}" data-i="${i}" data-f="photo2">
+          </div>
+          <small>These show when someone clicks to expand the past event (requires Past Expand toggle ON)</small>
+        </div>` : ''}
       </div>
     </div>
   `).join('');
@@ -954,11 +1001,18 @@ function renderEventsAdmin() {
   upList.innerHTML   = renderList(upcomingEvents, 'upcoming') || '<p style="font-size:.82rem;color:var(--dim)">No upcoming events.</p>';
   pastList.innerHTML = renderList(pastEvents, 'past')         || '<p style="font-size:.82rem;color:var(--dim)">No past events.</p>';
 
+  // Input listeners
   document.querySelectorAll('[data-ev][data-f]').forEach(input => {
     input.addEventListener('input', () => {
       const t = input.dataset.ev, i = parseInt(input.dataset.i), f = input.dataset.f;
-      if (t === 'upcoming') upcomingEvents[i][f] = input.value;
-      else pastEvents[i][f] = input.value;
+      const arr = t === 'upcoming' ? upcomingEvents : pastEvents;
+      if (f.startsWith('photo')) {
+        if (!arr[i].photos) arr[i].photos = [];
+        const idx = parseInt(f.replace('photo',''));
+        arr[i].photos[idx] = input.value;
+      } else {
+        arr[i][f] = input.value;
+      }
       if (f === 'name') {
         const el = input.closest('.event-admin-item')?.querySelector('.event-admin-name');
         if (el) el.textContent = input.value || 'Event';
@@ -966,11 +1020,60 @@ function renderEventsAdmin() {
     });
   });
 
+  // Poster file upload
+  document.querySelectorAll('[data-ev-poster]').forEach(fileInput => {
+    fileInput.addEventListener('change', () => {
+      const t = fileInput.dataset.evPoster, i = parseInt(fileInput.dataset.pi);
+      const file = fileInput.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        const arr = t === 'upcoming' ? upcomingEvents : pastEvents;
+        arr[i].posterUrl = r.result;
+        renderEventsAdmin();
+        showToast('Poster uploaded ✓');
+      };
+      r.readAsDataURL(file);
+    });
+  });
+
+  // Delete buttons
   document.querySelectorAll('.delete-btn[data-type]').forEach(btn => {
     btn.addEventListener('click', () => {
       const t = btn.dataset.type, i = parseInt(btn.dataset.index);
       if (t === 'upcoming') upcomingEvents.splice(i, 1);
       else pastEvents.splice(i, 1);
+      renderEventsAdmin();
+    });
+  });
+
+  // Drag-to-reorder
+  bindEventDrag(upList, upcomingEvents);
+  bindEventDrag(pastList, pastEvents);
+}
+
+function bindEventDrag(container, arr) {
+  let dragIdx = null;
+  container.querySelectorAll('.event-admin-item').forEach((item, i) => {
+    item.addEventListener('dragstart', e => {
+      dragIdx = i;
+      setTimeout(() => item.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      container.querySelectorAll('.event-admin-item').forEach(el => el.classList.remove('drag-over'));
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      container.querySelectorAll('.event-admin-item').forEach(el => el.classList.remove('drag-over'));
+      if (i !== dragIdx) item.classList.add('drag-over');
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragIdx === null || dragIdx === i) return;
+      const [moved] = arr.splice(dragIdx, 1);
+      arr.splice(i, 0, moved);
+      dragIdx = null;
       renderEventsAdmin();
     });
   });
@@ -1017,13 +1120,13 @@ function defaultAlbums() {
 }
 function defaultUpcoming() {
   return [
-    { name: 'Summer Fusion Night', day: '14', month: 'Aug 2025', venue: 'The Electric Ballroom', location: '📍 Mumbai, India', desc: 'An electrifying night blending Bollywood vibes with deep electronic beats.', ticketLink: '#' },
-    { name: 'Desi Beats Festival',  day: '22', month: 'Sep 2025', venue: 'Phoenix Grounds',       location: '📍 Bangalore, India', desc: 'A full-day festival celebrating South Asian sounds with modern electronic production.', ticketLink: '#' },
+    { name: 'Summer Fusion Night', day: '14', month: 'Aug 2025', venue: 'The Electric Ballroom', location: '📍 Mumbai, India', desc: 'An electrifying night blending Bollywood vibes with deep electronic beats.', ticketLink: '#', posterUrl: '' },
+    { name: 'Desi Beats Festival',  day: '22', month: 'Sep 2025', venue: 'Phoenix Grounds',       location: '📍 Bangalore, India', desc: 'A full-day festival celebrating South Asian sounds with modern electronic production.', ticketLink: '#', posterUrl: '' },
   ];
 }
 function defaultPast() {
   return [
-    { name: 'Electric Bollywood — Live Set', day: '03', month: 'Mar 2025', venue: 'Blue Frog', location: '📍 Mumbai, India', desc: 'Sold-out show at Blue Frog. An unforgettable night — thank you Mumbai.' },
+    { name: 'Electric Bollywood — Live Set', day: '03', month: 'Mar 2025', venue: 'Blue Frog', location: '📍 Mumbai, India', desc: 'Sold-out show at Blue Frog. An unforgettable night — thank you Mumbai.', posterUrl: '', photos: [] },
   ];
 }
 </script>

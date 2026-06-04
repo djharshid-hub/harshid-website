@@ -53,11 +53,16 @@ function closeNav() {
   if (navToggle)  navToggle.textContent = '☰';
 }
 
-if (navToggle && navLinks) {
+// Only bind nav in main.js if index.html hasn't already bound it (index has inline script)
+if (navToggle && navLinks && !navToggle.dataset.bound) {
+  navToggle.dataset.bound = '1';
   navToggle.addEventListener('click', () => navLinks.classList.contains('open') ? closeNav() : openNav());
   navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', closeNav));
 }
-if (navOverlay) navOverlay.addEventListener('click', closeNav);
+if (navOverlay && !navOverlay.dataset.bound) {
+  navOverlay.dataset.bound = '1';
+  navOverlay.addEventListener('click', closeNav);
+}
 
 // ── ACTIVE NAV ───────────────────────────────────────────────
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -150,9 +155,10 @@ async function loadSiteData() {
   if (cfg) applyConfig(cfg);
 
   // Events
-  const upcoming = evRows.filter(e => e.type === 'upcoming').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, ticketLink: e.ticket_link }));
-  const past     = evRows.filter(e => e.type === 'past').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description }));
-  applyEventsToPage(upcoming, past);
+  const upcoming = evRows.filter(e => e.type === 'upcoming').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, ticketLink: e.ticket_link, posterUrl: e.poster_url||'' }));
+  const past     = evRows.filter(e => e.type === 'past').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, posterUrl: e.poster_url||'', photos: e.photos||[] }));
+  const pastExpandEnabled = cfg ? cfg.pastExpandEnabled !== false : true;
+  applyEventsToPage(upcoming, past, pastExpandEnabled);
 
   // Gallery
   const galleryItems = galRows.map(r => ({ url: r.url, caption: r.caption, cat: r.category }));
@@ -182,6 +188,29 @@ function applyConfig(cfg) {
   if (!cfg) return;
 
   if (cfg.accentColor) document.documentElement.style.setProperty('--blue', cfg.accentColor);
+
+  // Apply visibility toggles
+  const vis = cfg.visToggles || {};
+  const upcomingSection = document.querySelector('#upcomingEventsList')?.closest?.('.section-wrap > *') || null;
+  // Show/hide entire upcoming/past events lists + their labels
+  const allSectionLabels = $$('.section-label');
+  if (vis.showUpcomingEvents === false) {
+    const upList = $('#upcomingEventsList');
+    if (upList) {
+      upList.style.display = 'none';
+      // hide the section label above it
+      allSectionLabels.forEach(l => { if (l.textContent.trim().toLowerCase().includes('upcoming')) l.style.display = 'none'; });
+      const addBtn = document.querySelector('[onclick*="upcoming"], #addUpcomingBtn');
+      if (addBtn) addBtn.style.display = 'none';
+    }
+  }
+  if (vis.showPastEvents === false) {
+    const pastList = $('#pastEventsList');
+    if (pastList) {
+      pastList.style.display = 'none';
+      allSectionLabels.forEach(l => { if (l.textContent.trim().toLowerCase().includes('past')) l.style.display = 'none'; });
+    }
+  }
 
   if (cfg.artistName) {
     $$('.nav-logo, .footer-logo').forEach(el => { if (!el.querySelector('img')) el.textContent = cfg.artistName; });
@@ -364,21 +393,25 @@ function applyLogoMode(cfg, logoDataUrl) {
   if (bgName && cfg.artistName) bgName.textContent = cfg.artistName;
 }
 
-function applyEventsToPage(upcoming, past) {
-  const upEl  = $('#upcomingEventsList');
+function applyEventsToPage(upcoming, past, pastExpandEnabled) {
+  const upEl   = $('#upcomingEventsList');
   const pastEl = $('#pastEventsList');
+
+  const posterThumb = (url, emoji) => url
+    ? `<div class="event-poster-thumb"><img src="${url}" alt="Event Poster"></div>`
+    : `<div class="event-poster-thumb"><span class="event-poster-emoji">${emoji}</span></div>`;
 
   if (upEl && upcoming.length) {
     upEl.innerHTML = upcoming.map((ev, i) => `
       <div class="event-card fade-in" data-target="uev${i}">
+        ${posterThumb(ev.posterUrl, '🎤')}
         <div class="event-date-block"><div class="event-day">${ev.day||'TBD'}</div><div class="event-month">${ev.month||''}</div></div>
         <div class="event-info"><h3>${ev.name||'Event'}</h3><div class="event-venue">${ev.venue||''}</div><div class="event-location">${ev.location||''}</div></div>
-        <div class="event-photo-placeholder">🎤</div><span class="event-toggle-icon">+</span>
+        <span class="event-toggle-icon">+</span>
       </div>
       <div class="event-expanded" id="uev${i}">
         <p>${ev.desc||''}</p>
         ${ev.ticketLink ? `<a href="${ev.ticketLink}" class="btn-primary" style="display:inline-block;margin-bottom:1.5rem" target="_blank">Get Tickets</a>` : ''}
-        <div class="event-expanded-inner"><div class="event-photo-placeholder-lg"><span>📷</span></div><div class="event-photo-placeholder-lg"><span>📷</span></div><div class="event-photo-placeholder-lg"><span>📷</span></div></div>
       </div>
     `).join('');
     $$('.fade-in', upEl).forEach(el => scrollObs.observe(el));
@@ -386,19 +419,28 @@ function applyEventsToPage(upcoming, past) {
   }
 
   if (pastEl && past.length) {
-    pastEl.innerHTML = past.map((ev, i) => `
-      <div class="event-card fade-in" data-target="pev${i}" style="opacity:.7">
-        <div class="event-date-block"><div class="event-day">${ev.day||'TBD'}</div><div class="event-month">${ev.month||''}</div></div>
-        <div class="event-info"><h3>${ev.name||'Event'}</h3><div class="event-venue">${ev.venue||''}</div><div class="event-location">${ev.location||''}</div></div>
-        <div class="event-photo-placeholder">📸</div><span class="event-toggle-icon">+</span>
-      </div>
-      <div class="event-expanded" id="pev${i}">
-        <p>${ev.desc||''}</p>
-        <div class="event-expanded-inner"><div class="event-photo-placeholder-lg"><span>📷</span></div><div class="event-photo-placeholder-lg"><span>📷</span></div><div class="event-photo-placeholder-lg"><span>📷</span></div></div>
-      </div>
-    `).join('');
+    const canExpand = pastExpandEnabled !== false;
+    pastEl.innerHTML = past.map((ev, i) => {
+      const photos = (ev.photos || []).filter(Boolean);
+      const photoHtml = photos.length
+        ? photos.map(url => `<div class="event-photo-placeholder-lg"><img src="${url}" alt="Show Photo"></div>`).join('')
+        : '';
+      return `
+        <div class="event-card fade-in past-event-card${canExpand ? '' : ' no-expand'}" ${canExpand ? `data-target="pev${i}"` : ''}>
+          ${posterThumb(ev.posterUrl, '📸')}
+          <div class="event-date-block"><div class="event-day">${ev.day||'TBD'}</div><div class="event-month">${ev.month||''}</div></div>
+          <div class="event-info"><h3>${ev.name||'Event'}</h3><div class="event-venue">${ev.venue||''}</div><div class="event-location">${ev.location||''}</div></div>
+          ${canExpand ? '<span class="event-toggle-icon past-toggle">+</span>' : '<span></span>'}
+        </div>
+        ${canExpand ? `
+        <div class="event-expanded" id="pev${i}">
+          ${ev.desc ? `<p>${ev.desc}</p>` : ''}
+          ${photoHtml ? `<div class="event-expanded-inner">${photoHtml}</div>` : ''}
+        </div>` : ''}
+      `;
+    }).join('');
     $$('.fade-in', pastEl).forEach(el => scrollObs.observe(el));
-    bindEventCards();
+    if (canExpand) bindEventCards();
   }
 }
 
