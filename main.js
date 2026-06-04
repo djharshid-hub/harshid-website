@@ -36,12 +36,28 @@ async function dbGetGallery() {
 }
 
 // ── MOBILE NAV ───────────────────────────────────────────────
-const navToggle = $('#navToggle');
-const navLinks  = $('#navLinks');
-if (navToggle && navLinks) {
-  navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
-  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+const navToggle  = $('#navToggle');
+const navLinks   = $('#navLinks');
+const navOverlay = $('#navOverlay');
+
+function openNav()  {
+  if (navLinks)   navLinks.classList.add('open');
+  if (navOverlay) navOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (navToggle)  navToggle.textContent = '✕';
 }
+function closeNav() {
+  if (navLinks)   navLinks.classList.remove('open');
+  if (navOverlay) navOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  if (navToggle)  navToggle.textContent = '☰';
+}
+
+if (navToggle && navLinks) {
+  navToggle.addEventListener('click', () => navLinks.classList.contains('open') ? closeNav() : openNav());
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', closeNav));
+}
+if (navOverlay) navOverlay.addEventListener('click', closeNav);
 
 // ── ACTIVE NAV ───────────────────────────────────────────────
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -180,14 +196,50 @@ function applyConfig(cfg) {
   const latestStrip = $('.latest-release-text');
   if (latestStrip && cfg.latestRelease) latestStrip.textContent = cfg.latestRelease;
 
-  const s1 = $('.stat-streams'); if (s1 && cfg.heroStat1) s1.textContent = cfg.heroStat1;
-  const s2 = $('.stat-yt');      if (s2 && cfg.heroStat2) s2.textContent = cfg.heroStat2;
-  const s3 = $('.stat-ig');      if (s3 && cfg.heroStat3) s3.textContent = cfg.heroStat3;
+  // Stat cards — numbers
+  const s1 = $('#statNum1'); if (s1 && cfg.heroStat1) s1.textContent = cfg.heroStat1;
+  const s2 = $('#statNum2'); if (s2 && cfg.heroStat2) s2.textContent = cfg.heroStat2;
+  const s3 = $('#statNum3'); if (s3 && cfg.heroStat3) s3.textContent = cfg.heroStat3;
+  // Stat cards — labels
+  const l1 = $('#statLbl1'); if (l1 && cfg.heroStatLbl1) l1.textContent = cfg.heroStatLbl1;
+  const l2 = $('#statLbl2'); if (l2 && cfg.heroStatLbl2) l2.textContent = cfg.heroStatLbl2;
+  const l3 = $('#statLbl3'); if (l3 && cfg.heroStatLbl3) l3.textContent = cfg.heroStatLbl3;
+  // Stat cards — icons
+  const ic1 = $('#statIcon1'); if (ic1 && cfg.heroStatIcon1) ic1.textContent = cfg.heroStatIcon1;
+  const ic2 = $('#statIcon2'); if (ic2 && cfg.heroStatIcon2) ic2.textContent = cfg.heroStatIcon2;
+  const ic3 = $('#statIcon3'); if (ic3 && cfg.heroStatIcon3) ic3.textContent = cfg.heroStatIcon3;
+  // Stat cards — individual show/hide
+  const sc1 = $('#statCard1'); if (sc1) sc1.style.display = cfg.showStat1 === false ? 'none' : '';
+  const sc2 = $('#statCard2'); if (sc2) sc2.style.display = cfg.showStat2 === false ? 'none' : '';
+  const sc3 = $('#statCard3'); if (sc3) sc3.style.display = cfg.showStat3 === false ? 'none' : '';
+
+  // Marquee — custom text
+  if (cfg.marqueeText) {
+    const track = $('#marqueeTrack');
+    if (track) {
+      const items = cfg.marqueeText.split('|').map(s => s.trim()).filter(Boolean);
+      if (items.length) {
+        const doubled = [...items, ...items];
+        track.innerHTML = doubled.map(t => `<span>${t}</span><span class="dot">✦</span>`).join('');
+      }
+    }
+  }
 
   const latestEl = $('.latest-release-strip');
   if (latestEl && cfg.showLatestStrip === false) latestEl.style.display = 'none';
-  const marquee = $('.marquee-wrap');
+  const marquee = $('#marqueeWrap');
   if (marquee && cfg.showMarquee === false) marquee.style.display = 'none';
+
+  // Genre tags — custom order/labels
+  if (cfg.genreTags) {
+    const tagsRow = $('#genreTagsRow');
+    if (tagsRow) {
+      const tags = cfg.genreTags.split('|').map(s => s.trim()).filter(Boolean);
+      if (tags.length) {
+        tagsRow.innerHTML = tags.map((t, i) => `<span class="tag-pill${i===0?' active':''}">${t}</span>`).join('');
+      }
+    }
+  }
 
   if (cfg.heroVideoUrl) applyHeroVideo(cfg.heroVideoUrl);
   if (cfg.heroVideoOpacity) { const vid = $('video'); if (vid) vid.style.opacity = cfg.heroVideoOpacity / 100; }

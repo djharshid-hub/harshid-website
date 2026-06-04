@@ -211,11 +211,51 @@
         <div class="field"><label>Latest Release strip text</label><input type="text" id="latestRelease" placeholder="Album Title — 2024"></div>
         <hr class="divider">
         <div class="sub-heading">Stat Cards</div>
-        <div class="field-row">
-          <div class="field"><label>Streams</label><input type="text" id="heroStat1" placeholder="6M+"></div>
-          <div class="field"><label>YouTube</label><input type="text" id="heroStat2" placeholder="31.7K"></div>
+        <p style="font-size:.78rem;color:var(--dim);margin-bottom:1rem">Each card can be individually shown/hidden, and you can change the number, label, and icon emoji.</p>
+
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-bottom:.7rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:.9rem;color:var(--off)">Card 1 — Streams</span>
+            <label class="toggle-switch"><input type="checkbox" id="showStat1" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:.5rem">
+            <div class="field" style="margin:0"><label>Icon</label><input type="text" id="heroStatIcon1" placeholder="🎵" maxlength="4"></div>
+            <div class="field" style="margin:0"><label>Number</label><input type="text" id="heroStat1" placeholder="6M+"></div>
+            <div class="field" style="margin:0"><label>Label</label><input type="text" id="heroStatLbl1" placeholder="Global Streams"></div>
+          </div>
         </div>
-        <div class="field"><label>Instagram</label><input type="text" id="heroStat3" placeholder="2.9K"></div>
+
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-bottom:.7rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:.9rem;color:var(--off)">Card 2 — YouTube</span>
+            <label class="toggle-switch"><input type="checkbox" id="showStat2" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:.5rem">
+            <div class="field" style="margin:0"><label>Icon</label><input type="text" id="heroStatIcon2" placeholder="▶" maxlength="4"></div>
+            <div class="field" style="margin:0"><label>Number</label><input type="text" id="heroStat2" placeholder="31.7K"></div>
+            <div class="field" style="margin:0"><label>Label</label><input type="text" id="heroStatLbl2" placeholder="YouTube Subs"></div>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-bottom:.7rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:.9rem;color:var(--off)">Card 3 — Instagram</span>
+            <label class="toggle-switch"><input type="checkbox" id="showStat3" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:.5rem">
+            <div class="field" style="margin:0"><label>Icon</label><input type="text" id="heroStatIcon3" placeholder="📸" maxlength="4"></div>
+            <div class="field" style="margin:0"><label>Number</label><input type="text" id="heroStat3" placeholder="2.9K"></div>
+            <div class="field" style="margin:0"><label>Label</label><input type="text" id="heroStatLbl3" placeholder="Instagram"></div>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <div class="sub-heading">Scrolling Marquee Text</div>
+        <div class="field"><label>Items (separate with | pipe symbol)</label><input type="text" id="marqueeText" placeholder="6M+ Streams | Vancouver BC | DJ Harshid | Bollywood Fusion | Electronic | Canada Tour 2025"><small>Example: 6M+ Streams | Vancouver BC | DJ Harshid — each item separated by |</small></div>
+
+        <hr class="divider">
+        <div class="sub-heading">Genre Tags (Bio Card)</div>
+        <div class="field"><label>Tags in order (separate with | pipe symbol)</label><input type="text" id="genreTags" placeholder="Bollywood | Electronic | Punjabi | Bhangra | Hip-Hop"><small>First tag gets highlighted. Change order by rearranging items.</small></div>
       </div>
 
       <!-- ══ GENERAL ══ -->
@@ -359,8 +399,16 @@
           <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showMarquee" checked><span class="toggle-slider"></span></label>
         </div>
         <div class="hide-item">
-          <div><div class="hide-item-label">Stat Cards (streams / YouTube / Instagram)</div><div class="hide-item-page">index.html — numbers below hero</div></div>
-          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showStats" checked><span class="toggle-slider"></span></label>
+          <div><div class="hide-item-label">Stat Card 1 (Streams)</div><div class="hide-item-page">index.html — hero right panel</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showStat1" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Stat Card 2 (YouTube)</div><div class="hide-item-page">index.html — hero right panel</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showStat2" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Stat Card 3 (Instagram)</div><div class="hide-item-page">index.html — hero right panel</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showStat3" checked><span class="toggle-slider"></span></label>
         </div>
 
         <div class="sub-heading">Music Page</div>
@@ -694,6 +742,9 @@ function loadFields(cfg) {
     'heroMode','heroLogoUrl','heroVideoUrl','heroVideoOpacity',
     'heroTagline','heroSub','heroCta1Text','heroCta1Link','heroCta2Text','latestRelease',
     'heroStat1','heroStat2','heroStat3',
+    'heroStatLbl1','heroStatLbl2','heroStatLbl3',
+    'heroStatIcon1','heroStatIcon2','heroStatIcon3',
+    'marqueeText','genreTags',
     'artistName','copyrightText',
     'bioHeading','bioPara1','bioPara2','bioPara3','bioPullQuote','bioPhotoUrl',
     'bioCity','bioGenre','bioSince','bioInstruments','bioReleases',
@@ -709,7 +760,7 @@ function loadFields(cfg) {
   });
   const colorEl = document.getElementById('accentColor');
   if (colorEl && cfg.accentColor) colorEl.value = cfg.accentColor;
-  ['showLatestStrip','showMarquee'].forEach(id => {
+  ['showLatestStrip','showMarquee','showStat1','showStat2','showStat3'].forEach(id => {
     const el = document.getElementById(id);
     if (el && cfg[id] !== undefined) el.checked = cfg[id];
   });
@@ -730,6 +781,9 @@ async function saveAll() {
     'heroMode','heroLogoUrl','heroVideoUrl','heroVideoOpacity',
     'heroTagline','heroSub','heroCta1Text','heroCta1Link','heroCta2Text','latestRelease',
     'heroStat1','heroStat2','heroStat3',
+    'heroStatLbl1','heroStatLbl2','heroStatLbl3',
+    'heroStatIcon1','heroStatIcon2','heroStatIcon3',
+    'marqueeText','genreTags',
     'artistName','copyrightText',
     'bioHeading','bioPara1','bioPara2','bioPara3','bioPullQuote','bioPhotoUrl',
     'bioCity','bioGenre','bioSince','bioInstruments','bioReleases',
@@ -742,7 +796,7 @@ async function saveAll() {
   ids.forEach(id => { const el = document.getElementById(id); if (el) cfg[id] = el.value; });
   const colorEl = document.getElementById('accentColor');
   if (colorEl) cfg.accentColor = colorEl.value;
-  ['showLatestStrip','showMarquee'].forEach(id => {
+  ['showLatestStrip','showMarquee','showStat1','showStat2','showStat3'].forEach(id => {
     const el = document.getElementById(id);
     if (el) cfg[id] = el.checked;
   });
@@ -752,6 +806,9 @@ async function saveAll() {
   document.querySelectorAll('.page-hide-toggle').forEach(el => { visToggles[el.dataset.key] = el.checked; });
   if (visToggles.showLatestStrip !== undefined) cfg.showLatestStrip = visToggles.showLatestStrip;
   if (visToggles.showMarquee !== undefined) cfg.showMarquee = visToggles.showMarquee;
+  if (visToggles.showStat1 !== undefined) cfg.showStat1 = visToggles.showStat1;
+  if (visToggles.showStat2 !== undefined) cfg.showStat2 = visToggles.showStat2;
+  if (visToggles.showStat3 !== undefined) cfg.showStat3 = visToggles.showStat3;
 
   cfg.albums = albums;
   cfg.visToggles = visToggles;

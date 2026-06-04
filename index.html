@@ -51,12 +51,34 @@
       display: flex; align-items: center; justify-content: space-between;
       box-shadow: 0 4px 40px rgba(0,0,0,0.4);
     }
-    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.14em; background: linear-gradient(135deg, #fff 30%, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.14em; background: linear-gradient(135deg, #fff 30%, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
     .nav-links { display: flex; gap: 1.6rem; list-style: none; }
     .nav-links a { text-decoration: none; color: var(--dim); font-family: 'Barlow Condensed', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; transition: color .2s; padding: .3rem .6rem; border-radius: 8px; }
     .nav-links a:hover { color: var(--white); background: rgba(255,255,255,0.05); }
     .nav-links a.active { color: var(--cyan); }
-    .nav-toggle { display: none; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: var(--white); font-size: 1.1rem; padding: .4rem .7rem; cursor: pointer; }
+    /* hamburger */
+    .nav-toggle {
+      display: none;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: var(--white);
+      font-size: 1.3rem;
+      padding: .4rem .75rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background .2s;
+      z-index: 1001;
+    }
+    .nav-toggle:hover { background: rgba(255,255,255,0.12); }
+    /* mobile overlay */
+    .nav-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 998;
+    }
+    .nav-overlay.open { display: block; }
 
     /* ══════════════════════════════
        HERO — full screen video bg
@@ -69,7 +91,6 @@
       overflow: hidden;
     }
 
-    /* VIDEO fills entire hero */
     .hero-video {
       position: absolute; inset: 0; z-index: 0;
     }
@@ -78,7 +99,6 @@
       object-fit: cover;
       display: block;
     }
-    /* placeholder shown when no video file is set */
     .hero-video-placeholder {
       position: absolute; inset: 0;
       background: linear-gradient(160deg, #0b0e16 0%, #0d1020 40%, #0a0f1e 100%);
@@ -92,7 +112,6 @@
       text-transform: uppercase; color: rgba(255,255,255,0.15);
     }
 
-    /* dark gradient overlay so text stays readable */
     .hero-overlay {
       position: absolute; inset: 0; z-index: 1;
       background:
@@ -101,14 +120,12 @@
         linear-gradient(to left,  rgba(6,8,12,0.6) 0%, transparent 50%);
     }
 
-    /* ambient blobs on top of video */
     .blob { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
     .blob-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(26,106,255,0.18) 0%, transparent 70%); bottom: -120px; left: 50%; transform: translateX(-50%); z-index: 2; }
     .blob-2 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%); top: 20%; left: 5%; z-index: 2; animation: blobDrift 8s ease-in-out infinite alternate; }
     .blob-3 { width: 250px; height: 250px; background: radial-gradient(circle, rgba(26,106,255,0.12) 0%, transparent 70%); top: 30%; right: 5%; z-index: 2; animation: blobDrift 10s ease-in-out infinite alternate-reverse; }
     @keyframes blobDrift { from { transform: translateY(0) scale(1); } to { transform: translateY(-30px) scale(1.05); } }
 
-    /* ghost background name */
     .hero-bg-name {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -48%);
@@ -129,7 +146,7 @@
     .marquee-track .dot { color: rgba(255,255,255,0.35); font-size: 0.45rem; }
     @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-    /* LEFT panel — text over video */
+    /* LEFT panel */
     .hero-left { position: relative; z-index: 5; padding: 0 4vw 8vh; animation: slideL 1s .7s both; }
     @keyframes slideL { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
     .hero-tag { display: inline-flex; align-items: center; gap: .5rem; background: rgba(26,106,255,0.15); border: 1px solid rgba(26,106,255,0.3); border-radius: 100px; padding: .35rem 1rem; font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1.2rem; }
@@ -142,15 +159,27 @@
     .hero-btns { display: flex; gap: .8rem; margin-top: 1.5rem; flex-wrap: wrap; }
 
     /* RIGHT panel — stat cards */
-    .hero-right { position: absolute; right: 4vw; bottom: 8vh; z-index: 5; display: flex; flex-direction: column; gap: .7rem; animation: slideR 1s .8s both; }
+    .hero-right {
+      position: absolute; right: 4vw; bottom: 8vh; z-index: 5;
+      display: flex; flex-direction: column; gap: .7rem;
+      animation: slideR 1s .8s both;
+    }
     @keyframes slideR { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
-    .stat-card { background: rgba(6,8,12,0.55); border: 1px solid rgba(26,106,255,0.25); border-radius: var(--r-md); padding: .9rem 1.4rem; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); display: flex; align-items: center; gap: 1rem; transition: border-color .3s, box-shadow .3s; min-width: 175px; }
+    .stat-card {
+      background: rgba(6,8,12,0.55);
+      border: 1px solid rgba(26,106,255,0.25);
+      border-radius: var(--r-md);
+      padding: .9rem 1.4rem;
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      display: flex; align-items: center; gap: 1rem;
+      transition: border-color .3s, box-shadow .3s;
+      min-width: 175px;
+    }
     .stat-card:hover { border-color: rgba(0,212,255,0.45); box-shadow: 0 0 28px rgba(0,212,255,0.12); }
     .stat-icon { width: 36px; height: 36px; background: linear-gradient(135deg, rgba(26,106,255,0.3), rgba(0,212,255,0.15)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
-    .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.45rem; line-height: 1; color: var(--white); display: block; }
-    .stat-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); display: block; }
+    .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.45rem; line-height: 1; color: var(--white); display: block; white-space: nowrap; }
+    .stat-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); display: block; white-space: nowrap; }
 
-    /* bottom fade */
     .hero-floor { position: absolute; bottom: 0; left: 0; right: 0; height: 160px; background: linear-gradient(to top, var(--black), transparent); z-index: 4; pointer-events: none; }
 
     /* ── BUTTONS ── */
@@ -206,7 +235,7 @@
     /* ── FOOTER ── */
     footer { background: var(--dark1); border-top: 1px solid rgba(26,106,255,0.1); padding: 2.5rem 5vw; }
     .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
-    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.14em; background: linear-gradient(135deg, #fff 30%, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.14em; background: linear-gradient(135deg, #fff 30%, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
     .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
     .footer-links a { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); text-decoration: none; padding: .4rem .8rem; border-radius: 100px; transition: all .2s; }
     .footer-links a:hover { color: var(--cyan); background: rgba(0,212,255,0.08); }
@@ -216,39 +245,94 @@
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s, transform .7s; }
     .reveal.in { opacity: 1; transform: none; }
 
-    /* ── MOBILE ── */
+    /* ══════════════════════════
+       MOBILE
+    ══════════════════════════ */
     @media (max-width: 960px) {
-      .nav-links { display: none; flex-direction: column; position: fixed; top: 0; right: 0; bottom: 0; width: 260px; background: rgba(6,8,12,0.97); backdrop-filter: blur(30px); padding: 5rem 1.5rem 2rem; gap: 0.5rem; border-left: 1px solid rgba(26,106,255,0.15); z-index: 999; }
+      .nav-toggle { display: flex; }
+      nav { padding: .8rem 1.2rem; }
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        position: fixed;
+        top: 0; right: 0; bottom: 0;
+        width: 75vw; max-width: 300px;
+        background: rgba(6,8,12,0.98);
+        backdrop-filter: blur(30px);
+        padding: 5.5rem 1.8rem 2rem;
+        gap: 0.3rem;
+        border-left: 1px solid rgba(26,106,255,0.15);
+        z-index: 999;
+        overflow-y: auto;
+      }
       .nav-links.open { display: flex; }
-      .nav-toggle { display: block; }
+      .nav-links a {
+        font-size: 1rem;
+        padding: .75rem 1rem;
+        border-radius: 10px;
+        border-left: none;
+      }
+      .nav-links a:hover { background: rgba(26,106,255,0.12); color: var(--white); }
+      .nav-links a.active { background: rgba(26,106,255,0.15); color: var(--cyan); }
+
       .bio-grid { grid-template-columns: 1fr; }
       .quick-grid { grid-template-columns: repeat(2, 1fr); }
-      .hero-right { position: static; padding: 1.5rem 4vw 4vh; flex-direction: row; flex-wrap: wrap; }
-      .hero-right .stat-card { min-width: 0; flex: 1; }
+
+      /* stat cards go horizontal at bottom on tablet */
+      .hero-right {
+        position: static;
+        padding: 1rem 4vw 4vh;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: .6rem;
+      }
+      .hero-right .stat-card {
+        min-width: 0;
+        flex: 1 1 calc(50% - .3rem);
+        padding: .7rem 1rem;
+      }
       .hero { align-items: stretch; flex-direction: column; justify-content: flex-end; }
     }
     @media (max-width: 640px) {
       .hero { min-height: 100svh; }
-      .hero-left { padding: 0 1.2rem 2rem; }
-      .hero-right { padding: 0 1.2rem 2.5rem; }
+      .hero-left { padding: 0 1.2rem 1.5rem; }
       .hero-bg-name { font-size: 80px; }
       .hero-btns { flex-direction: column; }
       .quick-grid { grid-template-columns: 1fr 1fr; }
       .section { padding: 3.5rem 1.2rem; }
-      nav { padding: .8rem 1rem; }
       footer { padding: 2rem 1.2rem; }
       .footer-inner { flex-direction: column; align-items: flex-start; gap: 1rem; }
       .ls-title { font-size: 1.2rem; }
+
+      /* stat cards: two per row on mobile */
+      .hero-right {
+        padding: 0 1rem 1.5rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: .5rem;
+      }
+      .hero-right .stat-card {
+        flex: 1 1 calc(50% - .25rem);
+        min-width: 130px;
+        padding: .65rem .9rem;
+        gap: .65rem;
+      }
+      .stat-icon { width: 30px; height: 30px; font-size: .85rem; }
+      .stat-num { font-size: 1.2rem; }
+      .stat-lbl { font-size: 0.56rem; }
     }
   </style>
 </head>
 <body>
 
+  <!-- overlay for mobile nav -->
+  <div class="nav-overlay" id="navOverlay"></div>
+
   <!-- ═══ NAVBAR ═══ -->
   <nav>
     <div class="nav-inner">
-      <div class="nav-logo">HARSHID</div>
-      <button class="nav-toggle" id="navToggle">☰</button>
+      <a href="index.html" class="nav-logo" id="siteLogo">HARSHID</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
       <ul class="nav-links" id="navLinks">
         <li><a href="index.html" class="active">Home</a></li>
         <li><a href="music.html">Music</a></li>
@@ -264,76 +348,71 @@
   <!-- ═══ 1. HERO — full-screen video background ═══ -->
   <section class="hero">
 
-    <!-- ▸ VIDEO BACKGROUND
-         Replace the src below with your video file path or URL.
-         e.g. src="hero.mp4"  or  src="https://yourcdn.com/hero.mp4"
-         The video fills the entire screen behind all content.
-    -->
     <div class="hero-video">
-      <video autoplay muted loop playsinline>
+      <video autoplay muted loop playsinline id="heroBgVideo">
         <source src="hero.mp4" type="video/mp4">
       </video>
-      <!-- shown only when no video is loaded -->
+      <div class="hero-video-placeholder" id="heroPlaceholder">
+        <div class="ph-icon">🎬</div>
+        <div class="ph-text">Upload a video in admin to show here</div>
+      </div>
     </div>
 
-    <!-- dark gradient so text stays readable -->
     <div class="hero-overlay"></div>
-
-    <!-- ambient glow blobs -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
 
-    <!-- ghost name watermark -->
-    <div class="hero-bg-name">HARSHID</div>
+    <div class="hero-bg-name" id="heroBgName">HARSHID</div>
 
-    <!-- blue scrolling marquee -->
-    <div class="marquee-wrap">
+    <!-- blue scrolling marquee — items rendered by JS from config -->
+    <div class="marquee-wrap" id="marqueeWrap">
       <div class="marquee-inner">
-        <div class="marquee-track">
-          <span>DJ Harshid</span><span class="dot">✦</span>
-          <span>Bollywood Fusion</span><span class="dot">✦</span>
-          <span>Electronic</span><span class="dot">✦</span>
-          <span>Canada Tour 2025</span><span class="dot">✦</span>
+        <div class="marquee-track" id="marqueeTrack">
           <span>6M+ Streams</span><span class="dot">✦</span>
           <span>Vancouver BC</span><span class="dot">✦</span>
           <span>DJ Harshid</span><span class="dot">✦</span>
           <span>Bollywood Fusion</span><span class="dot">✦</span>
           <span>Electronic</span><span class="dot">✦</span>
           <span>Canada Tour 2025</span><span class="dot">✦</span>
+          <!-- duplicated for seamless loop -->
           <span>6M+ Streams</span><span class="dot">✦</span>
           <span>Vancouver BC</span><span class="dot">✦</span>
+          <span>DJ Harshid</span><span class="dot">✦</span>
+          <span>Bollywood Fusion</span><span class="dot">✦</span>
+          <span>Electronic</span><span class="dot">✦</span>
+          <span>Canada Tour 2025</span><span class="dot">✦</span>
         </div>
       </div>
     </div>
 
-    <!-- LEFT: name + CTA (over video) -->
+    <!-- LEFT: name + CTA -->
     <div class="hero-left">
-      <div class="hero-tag">Based in Vancouver, Canada</div>
+      <div class="hero-tag hero-tagline">Based in Vancouver, Canada</div>
       <h1>
         <span class="solid">DJ</span>
         <span class="outline">HARSHID</span>
       </h1>
-      <p class="sub">Bollywood · Fusion · Electronic</p>
+      <p class="sub hero-sub">Bollywood · Fusion · Electronic</p>
       <div class="hero-btns">
-        <a href="music.html" class="btn btn-blue">▶ &nbsp;Listen Now</a>
-        <a href="epk.html" class="btn btn-ghost">Press Kit</a>
+        <a href="music.html" class="btn btn-blue hero-cta-1">▶ &nbsp;Listen Now</a>
+        <a href="epk.html" class="btn btn-ghost hero-cta-2">Press Kit</a>
       </div>
     </div>
 
-    <!-- RIGHT: stat cards (over video) -->
-    <div class="hero-right">
-      <div class="stat-card">
-        <div class="stat-icon">🎵</div>
-        <div><span class="stat-num">6M+</span><span class="stat-lbl">Global Streams</span></div>
+    <!-- RIGHT: stat cards — individually hideable -->
+    <div class="hero-right" id="heroStats">
+      <div class="stat-card" id="statCard1">
+        <div class="stat-icon" id="statIcon1">🎵</div>
+        <div><span class="stat-num stat-streams" id="statNum1">6M+</span><span class="stat-lbl" id="statLbl1">Global Streams</span></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon">▶</div>
-        <div><span class="stat-num">31.7K</span><span class="stat-lbl">YouTube Subs</span></div>
+      <div class="stat-card" id="statCard2">
+        <div class="stat-icon" id="statIcon2">▶</div>
+        <div><span class="stat-num stat-yt" id="statNum2">31.7K</span><span class="stat-lbl" id="statLbl2">YouTube Subs</span></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon">📸</div>
-        <div><span class="stat-num">2.9K</span><span class="stat-lbl">Instagram</span></div>
+      <div class="stat-card" id="statCard3">
+        <div class="stat-icon" id="statIcon3">📸</div>
+        <div><span class="stat-num stat-ig" id="statNum3">2.9K</span><span class="stat-lbl" id="statLbl3">Instagram</span></div>
       </div>
     </div>
 
@@ -366,9 +445,10 @@
             <div class="stat-box"><span class="n">3</span><span class="l">Tour Cities</span></div>
           </div>
           <div class="s-eyebrow" style="margin-bottom:.7rem">Genre Blend</div>
-          <div class="tags-row">
-            <span class="tag-pill active">Electronic</span>
+          <div class="tags-row" id="genreTagsRow">
+            <!-- rendered by JS from config -->
             <span class="tag-pill">Bollywood</span>
+            <span class="tag-pill active">Electronic</span>
             <span class="tag-pill">Punjabi</span>
             <span class="tag-pill">Bhangra</span>
             <span class="tag-pill">Hip-Hop</span>
@@ -407,46 +487,55 @@
   </section>
 
   <!-- ═══ 4. LATEST RELEASE ═══ -->
-  <section class="latest-strip">
+  <section class="latest-strip latest-release-strip">
     <div class="ls-label">Latest Release</div>
-    <div class="ls-title">Album Title — 2024</div>
+    <div class="ls-title latest-release-text">Album Title — 2024</div>
     <a href="music.html" class="btn btn-blue btn-sm">↓ Download Free</a>
   </section>
 
   <!-- ═══ 5. FOOTER ═══ -->
   <footer>
     <div class="footer-inner">
-      <div class="footer-logo">HARSHID</div>
+      <a href="index.html" class="footer-logo" id="footerLogo">HARSHID</a>
       <div class="footer-links">
-        <a href="#">Instagram</a>
-        <a href="#">Spotify</a>
-        <a href="#">YouTube</a>
-        <a href="#">SoundCloud</a>
+        <a href="#" id="fl-instagram">Instagram</a>
+        <a href="#" id="fl-spotify">Spotify</a>
+        <a href="#" id="fl-youtube">YouTube</a>
+        <a href="#" id="fl-soundcloud">SoundCloud</a>
       </div>
-      <p class="footer-copy">© 2025 Harshid. All rights reserved.</p>
+      <p class="footer-copy" id="footerCopy">© 2025 Harshid. All rights reserved.</p>
     </div>
   </footer>
 
   <script>
-    const toggle = document.getElementById('navToggle');
-    const links  = document.getElementById('navLinks');
-    toggle.addEventListener('click', () => links.classList.toggle('open'));
-    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+    // ── Mobile nav ──
+    const navToggle  = document.getElementById('navToggle');
+    const navLinks   = document.getElementById('navLinks');
+    const navOverlay = document.getElementById('navOverlay');
 
-    // Hide placeholder once video actually loads
-    document.querySelectorAll('.hero-video video').forEach(v => {
-      if (v.src || v.querySelector('source')) {
-        v.addEventListener('canplay', () => {
-          const ph = v.closest('.hero-video').querySelector('.hero-video-placeholder');
-          if (ph) ph.style.display = 'none';
-        });
-      }
-    });
+    function openNav()  { navLinks.classList.add('open');  navOverlay.classList.add('open');  document.body.style.overflow='hidden'; navToggle.textContent='✕'; }
+    function closeNav() { navLinks.classList.remove('open'); navOverlay.classList.remove('open'); document.body.style.overflow=''; navToggle.textContent='☰'; }
 
+    navToggle.addEventListener('click', () => navLinks.classList.contains('open') ? closeNav() : openNav());
+    navOverlay.addEventListener('click', closeNav);
+    navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', closeNav));
+
+    // ── Video placeholder ──
+    const vid = document.getElementById('heroBgVideo');
+    const ph  = document.getElementById('heroPlaceholder');
+    if (vid) {
+      vid.addEventListener('canplay', () => { if (ph) ph.style.display = 'none'; });
+      // If no source or source fails, placeholder stays visible
+      vid.addEventListener('error', () => { if (ph) ph.style.display = 'flex'; });
+    }
+
+    // ── Reveal animations ──
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
     }, { threshold: 0.08 });
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   </script>
+
+  <script src="main.js"></script>
 </body>
 </html>
