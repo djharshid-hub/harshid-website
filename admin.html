@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — HARSHID</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,700;0,900;1,700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #06080c; --dark1: #0b0e16; --dark2: #10141f; --dark3: #151a28;
+      --blue: #1a6aff;  --cyan: #00d4ff;  --white: #ffffff;
+      --off: #c8d0e0;   --dim: rgba(200,208,224,0.5);
+      --border: rgba(26,106,255,0.18);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--black); color: var(--white); font-family: 'Barlow', sans-serif; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* ── LOCK SCREEN ── */
+    #lockScreen { position: fixed; inset: 0; z-index: 9999; background: var(--black); display: flex; align-items: center; justify-content: center; }
+    #lockScreen.hidden { display: none; }
+    .lock-card { background: var(--dark2); border: 1px solid var(--border); border-radius: 20px; padding: 3rem 2.5rem; width: min(400px, 90vw); text-align: center; }
+    .lock-logo { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 0.12em; background: linear-gradient(135deg, #fff 0%, var(--cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: .5rem; }
+    .lock-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-bottom: 2.5rem; }
+    .lock-card input[type=password] { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--white); font-family: 'Barlow', sans-serif; font-size: 1rem; padding: .85rem 1.1rem; outline: none; letter-spacing: 0.1em; text-align: center; margin-bottom: 1rem; transition: border-color .2s; }
+    .lock-card input[type=password]:focus { border-color: var(--blue); }
+    .lock-card input[type=password].shake { animation: shake .35s ease; border-color: #ff3355; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    .lock-btn { width: 100%; background: linear-gradient(135deg, var(--blue), #0a47cc); border: none; border-radius: 10px; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: .9rem; cursor: pointer; transition: opacity .2s; }
+    .lock-btn:hover { opacity: .85; }
+    .lock-error { font-size: .78rem; color: #ff3355; margin-top: .8rem; min-height: 1.2em; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em; }
+    .lock-hint { font-size: .7rem; color: var(--dim); margin-top: 1.5rem; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.1em; }
+
+    /* ── ADMIN APP ── */
+    #adminApp { display: none; }
+    #adminApp.visible { display: block; }
+
+    .admin-topbar { background: var(--dark1); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .admin-topbar-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.12em; background: linear-gradient(135deg,#fff,var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .admin-topbar-title { font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+    .admin-topbar-actions { display: flex; gap: .6rem; }
+    .topbar-btn { background: linear-gradient(135deg, var(--blue), #0a47cc); border: none; border-radius: 8px; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: .78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: .5rem 1.2rem; cursor: pointer; transition: opacity .2s; }
+    .topbar-btn:hover { opacity: .85; }
+    .topbar-btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--off); }
+    .topbar-btn.ghost:hover { border-color: #ff3355; color: #ff3355; }
+    .topbar-btn.danger { background: rgba(255,51,85,.15); border: 1px solid rgba(255,51,85,.3); color: #ff3355; }
+
+    .admin-body { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 62px); }
+
+    .admin-sidebar { background: var(--dark1); border-right: 1px solid var(--border); padding: 1.5rem 0; position: sticky; top: 62px; height: calc(100vh - 62px); overflow-y: auto; }
+    .sidebar-label { font-family: 'Barlow Condensed', sans-serif; font-size: .62rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); padding: .4rem 1.5rem; margin-top: .8rem; }
+    .sidebar-tab { display: block; width: 100%; background: none; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: .92rem; font-weight: 400; letter-spacing: 0.06em; color: var(--off); text-align: left; padding: .55rem 1.5rem; cursor: pointer; transition: all .15s; border-left: 3px solid transparent; }
+    .sidebar-tab:hover { color: #fff; background: rgba(26,106,255,.08); }
+    .sidebar-tab.active { color: #fff; border-left-color: var(--blue); background: rgba(26,106,255,.12); }
+    .sidebar-tab .tab-icon { margin-right: .6rem; font-size: .9rem; }
+
+    .admin-content { padding: 2rem; overflow-y: auto; }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    .section-heading { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.08em; margin-bottom: 1.5rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+    .sub-heading { font-family: 'Barlow Condensed', sans-serif; font-size: .72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--blue); margin: 1.8rem 0 .9rem; }
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0; }
+
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: .72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); margin-bottom: .35rem; }
+    .field input[type=text], .field input[type=url], .field input[type=email], .field input[type=password], .field select, .field textarea { width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 8px; color: var(--white); font-family: 'Barlow', sans-serif; font-size: .88rem; padding: .65rem .9rem; outline: none; transition: border-color .2s; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); }
+    .field textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+    .field select { appearance: none; cursor: pointer; }
+    .field input[type=color] { width: 48px; height: 38px; border: 1px solid var(--border); border-radius: 8px; background: none; cursor: pointer; padding: 2px; }
+    .field input[type=range] { width: 100%; accent-color: var(--blue); }
+    .field input[type=file] { color: var(--off); font-size: .83rem; padding: .5rem 0; }
+    .field small { display: block; font-size: .7rem; color: var(--dim); margin-top: .35rem; line-height: 1.4; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: .65rem 0; border-bottom: 1px solid rgba(26,106,255,.08); }
+    .toggle-row-label { font-family: 'Barlow Condensed', sans-serif; font-size: .9rem; letter-spacing: 0.04em; color: var(--off); }
+    .toggle-switch { position: relative; width: 42px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; border-radius: 22px; background: rgba(255,255,255,.1); cursor: pointer; transition: .2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--off); left: 3px; top: 3px; transition: .2s; }
+    .toggle-switch input:checked + .toggle-slider { background: var(--blue); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); background: #fff; }
+
+    /* album admin cards */
+    .album-admin-item { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+    .album-admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .album-admin-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.06em; }
+
+    /* event admin */
+    .event-admin-item { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+    .event-admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .event-admin-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.06em; }
+
+    .delete-btn { background: rgba(255,51,85,.12); border: 1px solid rgba(255,51,85,.25); border-radius: 6px; color: #ff3355; font-size: .75rem; padding: .3rem .7rem; cursor: pointer; transition: all .2s; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em; }
+    .delete-btn:hover { background: rgba(255,51,85,.25); }
+
+    /* drag-to-reorder */
+    .event-admin-item { cursor: default; transition: opacity .15s, box-shadow .15s; }
+    .event-admin-item[draggable="true"] { cursor: grab; }
+    .event-admin-item.dragging { opacity: .4; box-shadow: 0 0 0 2px var(--blue); }
+    .event-admin-item.drag-over { box-shadow: 0 -3px 0 0 var(--cyan); }
+    .drag-handle { cursor: grab; color: var(--dim); font-size: 1rem; padding: 0 .4rem; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    .event-poster-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+    .add-btn { background: rgba(26,106,255,.12); border: 1px solid rgba(26,106,255,.3); border-radius: 8px; color: var(--blue); font-family: 'Barlow Condensed', sans-serif; font-size: .85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: .6rem 1.2rem; cursor: pointer; margin-top: .5rem; transition: all .2s; }
+    .add-btn:hover { background: rgba(26,106,255,.2); }
+
+    /* gallery */
+    .gallery-thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: .6rem; margin-top: 1rem; }
+    .gallery-thumb { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: rgba(255,255,255,.04); border: 1px solid var(--border); }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-thumb .del-thumb { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.7); border: none; border-radius: 50%; color: #ff3355; width: 22px; height: 22px; font-size: .7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* page hides */
+    .hide-item { display: flex; align-items: center; justify-content: space-between; padding: .65rem 0; border-bottom: 1px solid rgba(26,106,255,.08); }
+    .hide-item-label { font-family: 'Barlow Condensed', sans-serif; font-size: .88rem; color: var(--off); }
+    .hide-item-page { font-size: .65rem; color: var(--dim); margin-top: .15rem; }
+
+    /* password section */
+    .pw-change-box { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; }
+    .pw-success { color: #00d4a0; font-family: 'Barlow Condensed',sans-serif; font-size:.85rem; margin-top:.6rem; min-height:1.1em; }
+    .pw-error   { color: #ff3355; font-family: 'Barlow Condensed',sans-serif; font-size:.85rem; margin-top:.6rem; min-height:1.1em; }
+
+    /* toast */
+    #toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, var(--blue), #0a47cc); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: .9rem; letter-spacing: 0.08em; padding: .7rem 1.8rem; border-radius: 50px; white-space: nowrap; z-index: 99999; transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s; opacity: 0; pointer-events: none; }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    .back-link { display: inline-flex; align-items: center; gap: .4rem; font-family: 'Barlow Condensed', sans-serif; font-size: .78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); text-decoration: none; transition: color .2s; }
+    .back-link:hover { color: var(--white); }
+
+    @media (max-width: 768px) {
+      .admin-body { grid-template-columns: 1fr; }
+      .admin-sidebar { position: static; height: auto; display: flex; flex-wrap: wrap; padding: .5rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .sidebar-tab { width: auto; flex-shrink: 0; padding: .4rem .9rem; border-left: none; border-bottom: 3px solid transparent; }
+      .sidebar-tab.active { border-bottom-color: var(--blue); border-left-color: transparent; }
+      .sidebar-label { display: none; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-logo">HARSHID</div>
+    <div class="lock-label">Admin Panel</div>
+    <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="current-password">
+    <button class="lock-btn" id="loginBtn">Unlock</button>
+    <div class="lock-error" id="loginError"></div>
+    <div class="lock-hint">Access restricted. Authorised users only.</div>
+  </div>
+</div>
+
+<!-- ══ ADMIN APP ══ -->
+<div id="adminApp">
+
+  <div class="admin-topbar">
+    <div style="display:flex;align-items:center;gap:1.5rem">
+      <a href="index.html" class="back-link">← Back to Site</a>
+      <span class="admin-topbar-title">Admin Panel</span>
+    </div>
+    <span class="admin-topbar-logo">HARSHID</span>
+    <div class="admin-topbar-actions">
+      <button class="topbar-btn" id="saveAllBtn">💾 Save All</button>
+      <button class="topbar-btn danger" id="resetAllBtn">Reset</button>
+      <button class="topbar-btn ghost" id="logoutBtn">Lock</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <nav class="admin-sidebar">
+      <div class="sidebar-label">Content</div>
+      <button class="sidebar-tab active" data-tab="hero"><span class="tab-icon">🏠</span>Hero</button>
+      <button class="sidebar-tab" data-tab="general"><span class="tab-icon">⚙️</span>General</button>
+      <button class="sidebar-tab" data-tab="music"><span class="tab-icon">🎵</span>Music</button>
+      <button class="sidebar-tab" data-tab="events"><span class="tab-icon">📅</span>Events</button>
+      <button class="sidebar-tab" data-tab="gallery"><span class="tab-icon">🖼️</span>Gallery</button>
+      <div class="sidebar-label">Artist</div>
+      <button class="sidebar-tab" data-tab="bio"><span class="tab-icon">👤</span>Bio</button>
+      <button class="sidebar-tab" data-tab="social"><span class="tab-icon">🔗</span>Social & Email</button>
+      <button class="sidebar-tab" data-tab="epk"><span class="tab-icon">📰</span>Press Kit</button>
+      <div class="sidebar-label">Settings</div>
+      <button class="sidebar-tab" data-tab="visibility"><span class="tab-icon">👁️</span>Show / Hide</button>
+      <button class="sidebar-tab" data-tab="security"><span class="tab-icon">🔒</span>Security</button>
+    </nav>
+
+    <div class="admin-content">
+
+      <!-- ══ HERO ══ -->
+      <div class="admin-section active" id="tab-hero">
+        <div class="section-heading">Hero Section</div>
+        <div class="sub-heading">Logo / Name</div>
+        <div class="field"><label>Show text name or logo image?</label>
+          <select id="heroMode">
+            <option value="text">Text — HARSHID written out</option>
+            <option value="logo">Logo Image (upload your logo)</option>
+          </select>
+        </div>
+        <div id="heroLogoField" style="display:none">
+          <div class="field"><label>Upload Logo (PNG transparent bg)</label><input type="file" id="heroLogoFile" accept="image/*"></div>
+          <div class="field"><label>Or paste a logo URL</label><input type="url" id="heroLogoUrl" placeholder="https://..."></div>
+        </div>
+        <hr class="divider">
+        <div class="sub-heading">Background Video</div>
+        <div class="field"><label>Upload video (MP4)</label><input type="file" id="heroVideoFile" accept="video/*"><small>⚠ For permanent use, upload to Cloudflare/Vimeo and paste URL below. Local files only last this session.</small></div>
+        <div class="field"><label>Video URL (permanent — public MP4 link)</label><input type="url" id="heroVideoUrl" placeholder="https://your-cdn.com/video.mp4"></div>
+        <div class="field"><label>Video Brightness</label><input type="range" id="heroVideoOpacity" min="10" max="80" value="45"></div>
+        <hr class="divider">
+        <div class="sub-heading">Hero Text</div>
+        <div class="field"><label>Tag above name</label><input type="text" id="heroTagline" placeholder="Based in Vancouver, Canada"></div>
+        <div class="field"><label>Genre line below name</label><input type="text" id="heroSub" placeholder="Bollywood · Fusion · Electronic"></div>
+        <div class="field-row">
+          <div class="field"><label>Main button text</label><input type="text" id="heroCta1Text" placeholder="▶ Listen Now"></div>
+          <div class="field"><label>Main button link</label><input type="url" id="heroCta1Link" placeholder="music.html"></div>
+        </div>
+        <div class="field"><label>Second button text</label><input type="text" id="heroCta2Text" placeholder="Press Kit"></div>
+        <div class="field"><label>Latest Release strip text</label><input type="text" id="latestRelease" placeholder="Album Title — 2024"></div>
+        <hr class="divider">
+        <div class="sub-heading">Stat Cards</div>
+        <p style="font-size:.78rem;color:var(--dim);margin-bottom:1rem">Each card can be individually shown/hidden, and you can change the number, label, and icon emoji.</p>
+
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-bottom:.7rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:.9rem;color:var(--off)">Card 1 — Streams</span>
+            <label class="toggle-switch"><input type="checkbox" id="showStat1" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:.5rem">
+            <div class="field" style="margin:0"><label>Icon</label><input type="text" id="heroStatIcon1" placeholder="🎵" maxlength="4"></div>
+            <div class="field" style="margin:0"><label>Number</label><input type="text" id="heroStat1" placeholder="6M+"></div>
+            <div class="field" style="margin:0"><label>Label</label><input type="text" id="heroStatLbl1" placeholder="Global Streams"></div>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-bottom:.7rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:.9rem;color:var(--off)">Card 2 — YouTube</span>
+            <label class="toggle-switch"><input type="checkbox" id="showStat2" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:.5rem">
+            <div class="field" style="margin:0"><label>Icon</label><input type="text" id="heroStatIcon2" placeholder="▶" maxlength="4"></div>
+            <div class="field" style="margin:0"><label>Number</label><input type="text" id="heroStat2" placeholder="31.7K"></div>
+            <div class="field" style="margin:0"><label>Label</label><input type="text" id="heroStatLbl2" placeholder="YouTube Subs"></div>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-bottom:.7rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:.9rem;color:var(--off)">Card 3 — Instagram</span>
+            <label class="toggle-switch"><input type="checkbox" id="showStat3" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:.5rem">
+            <div class="field" style="margin:0"><label>Icon</label><input type="text" id="heroStatIcon3" placeholder="📸" maxlength="4"></div>
+            <div class="field" style="margin:0"><label>Number</label><input type="text" id="heroStat3" placeholder="2.9K"></div>
+            <div class="field" style="margin:0"><label>Label</label><input type="text" id="heroStatLbl3" placeholder="Instagram"></div>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <div class="sub-heading">Scrolling Marquee Text</div>
+        <div class="field"><label>Items (separate with | pipe symbol)</label><input type="text" id="marqueeText" placeholder="6M+ Streams | Vancouver BC | DJ Harshid | Bollywood Fusion | Electronic | Canada Tour 2025"><small>Example: 6M+ Streams | Vancouver BC | DJ Harshid — each item separated by |</small></div>
+
+        <hr class="divider">
+        <div class="sub-heading">Genre Tags (Bio Card)</div>
+        <div class="field"><label>Tags in order (separate with | pipe symbol)</label><input type="text" id="genreTags" placeholder="Bollywood | Electronic | Punjabi | Bhangra | Hip-Hop"><small>First tag gets highlighted. Change order by rearranging items.</small></div>
+      </div>
+
+      <!-- ══ GENERAL ══ -->
+      <div class="admin-section" id="tab-general">
+        <div class="section-heading">General Settings</div>
+        <div class="field"><label>Artist Name (nav & footer)</label><input type="text" id="artistName" placeholder="HARSHID"></div>
+        <div class="field-row">
+          <div class="field"><label>Accent Color</label><input type="color" id="accentColor" value="#1a6aff"></div>
+          <div class="field"><label>Copyright line</label><input type="text" id="copyrightText" placeholder="© 2025 Harshid. All rights reserved."></div>
+        </div>
+        <hr class="divider">
+        <div class="sub-heading">Toggles</div>
+        <div class="toggle-row">
+          <span class="toggle-row-label">Show "Latest Release" strip on homepage</span>
+          <label class="toggle-switch"><input type="checkbox" id="showLatestStrip" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-row-label">Show scrolling marquee on homepage</span>
+          <label class="toggle-switch"><input type="checkbox" id="showMarquee" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <!-- ══ MUSIC ══ -->
+      <div class="admin-section" id="tab-music">
+        <div class="section-heading">Music — Albums & Releases</div>
+        <p style="font-size:.82rem;color:var(--dim);margin-bottom:1.5rem">Add as many albums or releases as you want. The first one is shown as "Latest Release", the rest as "Previous Releases".</p>
+        <div id="albumList"></div>
+        <button class="add-btn" id="addAlbumBtn">+ Add Album / Release</button>
+      </div>
+
+      <!-- ══ EVENTS ══ -->
+      <div class="admin-section" id="tab-events">
+        <div class="section-heading">Events</div>
+
+        <div class="toggle-row" style="margin-bottom:1.5rem">
+          <div>
+            <div class="toggle-row-label">Enable Past Shows expand (show photos on click)</div>
+            <div style="font-size:.72rem;color:var(--dim);margin-top:.15rem">When OFF, past shows are plain non-clickable cards</div>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="pastExpandToggle" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="sub-heading">Upcoming Shows <span style="font-size:.7rem;color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">— drag ⠿ to reorder</span></div>
+        <div id="upcomingEventsList"></div>
+        <button class="add-btn" id="addUpcomingBtn">+ Add Upcoming Show</button>
+        <hr class="divider">
+        <div class="sub-heading">Past Shows <span style="font-size:.7rem;color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">— drag ⠿ to reorder</span></div>
+        <div id="pastEventsList"></div>
+        <button class="add-btn" id="addPastBtn">+ Add Past Show</button>
+      </div>
+
+      <!-- ══ GALLERY ══ -->
+      <div class="admin-section" id="tab-gallery">
+        <div class="section-heading">Gallery</div>
+        <div class="sub-heading">Add Photos</div>
+        <div class="field"><label>Upload photos (select multiple)</label><input type="file" id="galleryUploadFile" accept="image/*" multiple></div>
+        <div class="field-row">
+          <div class="field"><label>Caption</label><input type="text" id="galleryNewCaption" placeholder="Live at Blue Frog · 2025"></div>
+          <div class="field"><label>Category</label>
+            <select id="galleryNewCat">
+              <option value="live">Live Shows</option>
+              <option value="studio">Studio</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Or paste an image URL</label><input type="url" id="galleryNewUrl" placeholder="https://..."></div>
+        <button class="add-btn" id="addGalleryUrlBtn">+ Add from URL</button>
+        <hr class="divider">
+        <div class="sub-heading">Current Gallery (<span id="galleryCount">0</span> photos)</div>
+        <div id="galleryAdminGrid"></div>
+      </div>
+
+      <!-- ══ BIO ══ -->
+      <div class="admin-section" id="tab-bio">
+        <div class="section-heading">Bio</div>
+        <div class="field"><label>Main Heading</label><input type="text" id="bioHeading" placeholder="Where the East meets the Electric"></div>
+        <div class="field"><label>Paragraph 1</label><textarea id="bioPara1"></textarea></div>
+        <div class="field"><label>Paragraph 2</label><textarea id="bioPara2"></textarea></div>
+        <div class="field"><label>Paragraph 3</label><textarea id="bioPara3"></textarea></div>
+        <div class="field"><label>Pull Quote</label><textarea id="bioPullQuote" placeholder="I don't just play music — I build a moment."></textarea></div>
+        <hr class="divider">
+        <div class="sub-heading">Artist Card</div>
+        <div class="field"><label>Upload Photo</label><input type="file" id="bioPhotoFile" accept="image/*"></div>
+        <div class="field"><label>Photo URL</label><input type="url" id="bioPhotoUrl" placeholder="https://..."></div>
+        <div class="field-row">
+          <div class="field"><label>Based In</label><input type="text" id="bioCity" placeholder="Vancouver, Canada"></div>
+          <div class="field"><label>Genre</label><input type="text" id="bioGenre" placeholder="Bollywood Fusion / Electronic"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Active Since</label><input type="text" id="bioSince" placeholder="2016"></div>
+          <div class="field"><label>Instruments</label><input type="text" id="bioInstruments" placeholder="DJ Decks, Ableton"></div>
+        </div>
+        <div class="field"><label>Releases</label><input type="text" id="bioReleases" placeholder="5 Projects"></div>
+      </div>
+
+      <!-- ══ SOCIAL ══ -->
+      <div class="admin-section" id="tab-social">
+        <div class="section-heading">Social & Email</div>
+        <div class="field"><label>Instagram URL</label><input type="url" id="socialIG" placeholder="https://instagram.com/djharshid"></div>
+        <div class="field"><label>Spotify URL</label><input type="url" id="socialSpotify" placeholder="https://open.spotify.com/artist/..."></div>
+        <div class="field"><label>YouTube URL</label><input type="url" id="socialYT" placeholder="https://youtube.com/@..."></div>
+        <div class="field"><label>SoundCloud URL</label><input type="url" id="socialSC" placeholder="https://soundcloud.com/..."></div>
+        <div class="field"><label>Apple Music URL</label><input type="url" id="socialAM" placeholder="https://music.apple.com/..."></div>
+        <hr class="divider">
+        <div class="sub-heading">Contact Emails</div>
+        <div class="field"><label>Booking Email</label><input type="email" id="emailBooking" placeholder="booking@harshid.com"></div>
+        <div class="field"><label>Press Email</label><input type="email" id="emailPress" placeholder="press@harshid.com"></div>
+        <div class="field"><label>General Email</label><input type="email" id="emailGeneral" placeholder="hello@harshid.com"></div>
+      </div>
+
+      <!-- ══ EPK ══ -->
+      <div class="admin-section" id="tab-epk">
+        <div class="section-heading">Press Kit</div>
+        <div class="field"><label>Overview Blurb</label><textarea id="epkOverview"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label>Global Streams</label><input type="text" id="statStreams" placeholder="6M+"></div>
+          <div class="field"><label>Instagram Followers</label><input type="text" id="statIG" placeholder="2.9K"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>YouTube Subscribers</label><input type="text" id="statYT" placeholder="31.7K"></div>
+          <div class="field"><label>Releases</label><input type="text" id="statReleases" placeholder="5+"></div>
+        </div>
+        <hr class="divider">
+        <div class="sub-heading">Press Quotes</div>
+        <div class="field"><label>Quote 1</label><input type="text" id="pressQ1" placeholder="Quote text..."></div>
+        <div class="field"><label>Quote 1 Source</label><input type="text" id="pressQ1Src" placeholder="— Publication Name"></div>
+        <div class="field"><label>Quote 2</label><input type="text" id="pressQ2" placeholder="Quote text..."></div>
+        <div class="field"><label>Quote 2 Source</label><input type="text" id="pressQ2Src" placeholder="— Music Blog"></div>
+        <hr class="divider">
+        <div class="sub-heading">Download Links</div>
+        <div class="field"><label>Full EPK PDF</label><input type="url" id="epkPdfLink" placeholder="https://drive.google.com/..."></div>
+        <div class="field"><label>Press Photos ZIP</label><input type="url" id="epkPhotosLink" placeholder="https://..."></div>
+        <div class="field"><label>Artist Bio DOCX</label><input type="url" id="epkBioLink" placeholder="https://..."></div>
+        <div class="field"><label>Logo Pack ZIP</label><input type="url" id="epkLogoLink" placeholder="https://..."></div>
+      </div>
+
+      <!-- ══ VISIBILITY ══ -->
+      <div class="admin-section" id="tab-visibility">
+        <div class="section-heading">Show / Hide Page Sections</div>
+        <p style="font-size:.82rem;color:var(--dim);margin-bottom:1.5rem">Toggle any section off to hide it from public visitors. Changes apply after Save All.</p>
+
+        <div class="sub-heading">Homepage</div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Latest Release Strip</div><div class="hide-item-page">index.html — bar under nav</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showLatestStrip" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Scrolling Marquee</div><div class="hide-item-page">index.html — rolling text ticker</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showMarquee" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Stat Card 1 (Streams)</div><div class="hide-item-page">index.html — hero right panel</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showStat1" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Stat Card 2 (YouTube)</div><div class="hide-item-page">index.html — hero right panel</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showStat2" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Stat Card 3 (Instagram)</div><div class="hide-item-page">index.html — hero right panel</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showStat3" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="sub-heading">Music Page</div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Latest Release section</div><div class="hide-item-page">music.html — first album card</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showMusicLatest" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Previous Releases section</div><div class="hide-item-page">music.html — older album cards</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showMusicPrevious" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="sub-heading">Events Page</div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Upcoming Shows section</div><div class="hide-item-page">events.html</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showUpcomingEvents" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Past Shows section</div><div class="hide-item-page">events.html</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showPastEvents" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Past Shows — expand to show photos</div><div class="hide-item-page">events.html — toggle click-to-expand on past events</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="pastExpandEnabled" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="sub-heading">Gallery Page</div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Live Shows photos</div><div class="hide-item-page">gallery.html — filter category</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showGalleryLive" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="sub-heading">Contact Page</div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Contact Form</div><div class="hide-item-page">contact.html</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showContactForm" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Contact Info (email boxes)</div><div class="hide-item-page">contact.html</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showContactInfo" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="sub-heading">EPK / Press Kit Page</div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Press Downloads section</div><div class="hide-item-page">epk.html</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showEpkDownloads" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="hide-item">
+          <div><div class="hide-item-label">Press Quotes section</div><div class="hide-item-page">epk.html</div></div>
+          <label class="toggle-switch"><input type="checkbox" class="page-hide-toggle" data-key="showEpkQuotes" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <!-- ══ SECURITY ══ -->
+      <div class="admin-section" id="tab-security">
+        <div class="section-heading">Security</div>
+        <p style="font-size:.88rem;color:var(--off);line-height:1.6;margin-bottom:1.5rem">
+          The admin panel password is stored in your browser's localStorage so only you can change it from this device. To change the password on a new device, you'll need to remember the current one.
+        </p>
+        <div class="pw-change-box">
+          <div class="sub-heading" style="margin-top:0">Change Password</div>
+          <div class="field"><label>Current Password</label><input type="password" id="pwCurrent" placeholder="Enter current password"></div>
+          <div class="field"><label>New Password</label><input type="password" id="pwNew" placeholder="Enter new password"></div>
+          <div class="field"><label>Confirm New Password</label><input type="password" id="pwConfirm" placeholder="Re-enter new password"></div>
+          <button class="add-btn" id="changePwBtn">Update Password</button>
+          <div class="pw-success" id="pwSuccess"></div>
+          <div class="pw-error" id="pwError"></div>
+        </div>
+      </div>
+
+    </div><!-- end admin-content -->
+  </div><!-- end admin-body -->
+</div><!-- end adminApp -->
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+//  HARSHID ADMIN — Supabase Edition
+//  All data saves to Supabase DB — persists on every device.
+// ============================================================
+
+const SUPABASE_URL  = 'https://iteskszntcqpmekygwia.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0ZXNrc3pudGNxcG1la3lnd2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjYxNTAsImV4cCI6MjA5NjEwMjE1MH0.qFgamuHtaVocusHD4XW2WKRPEh8nisl0v1bMJnnCzKo';
+const HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+
+// ── SUPABASE HELPERS ─────────────────────────────────────────
+async function dbGet(key) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.${encodeURIComponent(key)}&select=value&order=id.desc&limit=1`, { headers: HEADERS });
+  const d = await r.json();
+  if (!d.length) return null;
+  try { return JSON.parse(d[0].value); } catch { return d[0].value; }
+}
+
+async function dbSet(key, value) {
+  const body = JSON.stringify({ key, value: JSON.stringify(value) });
+  // Delete any existing rows for this key first, then insert fresh
+  // This guarantees a single row per key regardless of unique constraint
+  await fetch(`${SUPABASE_URL}/rest/v1/site_config?key=eq.${encodeURIComponent(key)}`, {
+    method: 'DELETE',
+    headers: HEADERS,
+  });
+  await fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body
+  });
+}
+
+async function dbGetEvents() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/events?select=*&order=sort_order.asc`, { headers: HEADERS });
+  return await r.json();
+}
+
+async function dbSaveEvents(upcoming, past) {
+  // Delete all then reinsert
+  await fetch(`${SUPABASE_URL}/rest/v1/events?id=gt.0`, { method: 'DELETE', headers: HEADERS });
+  const rows = [
+    ...upcoming.map((ev, i) => ({ type: 'upcoming', name: ev.name||'', day: ev.day||'', month: ev.month||'', venue: ev.venue||'', location: ev.location||'', description: ev.desc||'', ticket_link: ev.ticketLink||'', sort_order: i, poster_url: ev.posterUrl||'' })),
+    ...past.map((ev, i) => ({ type: 'past', name: ev.name||'', day: ev.day||'', month: ev.month||'', venue: ev.venue||'', location: ev.location||'', description: ev.desc||'', ticket_link: '', sort_order: i, poster_url: ev.posterUrl||'' })),
+  ];
+  if (!rows.length) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/events`, { method: 'POST', headers: { ...HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(rows) });
+}
+
+async function dbGetGallery() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/gallery?select=*&order=sort_order.asc`, { headers: HEADERS });
+  return await r.json();
+}
+
+async function dbSaveGallery(items) {
+  await fetch(`${SUPABASE_URL}/rest/v1/gallery?id=gt.0`, { method: 'DELETE', headers: HEADERS });
+  if (!items.length) return;
+  const rows = items.map((item, i) => ({ url: item.url, caption: item.caption||'', category: item.cat||'promo', sort_order: i }));
+  await fetch(`${SUPABASE_URL}/rest/v1/gallery`, { method: 'POST', headers: { ...HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(rows) });
+}
+
+// ── LOCAL FALLBACK (password only) ───────────────────────────
+const local = {
+  get: (k) => { try { return JSON.parse(localStorage.getItem('harshid_' + k)); } catch { return null; } },
+  set: (k, v) => localStorage.setItem('harshid_' + k, JSON.stringify(v)),
+};
+
+const DEFAULT_PASSWORD = 'harshid2026';
+if (!local.get('adminPassword')) local.set('adminPassword', DEFAULT_PASSWORD);
+const SESSION_KEY = 'harshid_adminAuth';
+
+// ── AUTH ──────────────────────────────────────────────────────
+const lockScreen = document.getElementById('lockScreen');
+const adminApp   = document.getElementById('adminApp');
+const pwInput    = document.getElementById('passwordInput');
+const loginBtn   = document.getElementById('loginBtn');
+const loginError = document.getElementById('loginError');
+
+function unlock() {
+  lockScreen.classList.add('hidden');
+  adminApp.classList.add('visible');
+  initAdminPanel();
+}
+if (sessionStorage.getItem(SESSION_KEY) === '1') unlock();
+
+loginBtn.addEventListener('click', attemptLogin);
+pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+
+function attemptLogin() {
+  const savedPw = local.get('adminPassword') || DEFAULT_PASSWORD;
+  if (pwInput.value === savedPw) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    unlock();
+  } else {
+    loginError.textContent = 'Incorrect password. Try again.';
+    pwInput.classList.add('shake');
+    pwInput.value = '';
+    setTimeout(() => { pwInput.classList.remove('shake'); loginError.textContent = ''; }, 1500);
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+});
+
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = color || '';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── STATE ─────────────────────────────────────────────────────
+let upcomingEvents = [];
+let pastEvents     = [];
+let galleryItems   = [];
+let albums         = [];
+
+// ── INIT ──────────────────────────────────────────────────────
+async function initAdminPanel() {
+  showToast('Loading data…', 'rgba(26,106,255,0.85)');
+
+  // Load config from Supabase
+  const cfg = await dbGet('config') || {};
+
+  // Load events
+  const evRows = await dbGetEvents();
+  upcomingEvents = evRows.filter(e => e.type === 'upcoming').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, ticketLink: e.ticket_link, posterUrl: e.poster_url||'' }));
+  pastEvents     = evRows.filter(e => e.type === 'past').map(e => ({ name: e.name, day: e.day, month: e.month, venue: e.venue, location: e.location, desc: e.description, posterUrl: e.poster_url||'' }));
+  if (!upcomingEvents.length) upcomingEvents = defaultUpcoming();
+  if (!pastEvents.length)     pastEvents     = defaultPast();
+
+  // Load gallery
+  const galRows = await dbGetGallery();
+  galleryItems = galRows.map(r => ({ url: r.url, caption: r.caption, cat: r.category }));
+
+  // Load albums from config
+  albums = cfg.albums || defaultAlbums();
+
+  loadFields(cfg);
+  // Load pastExpand toggle
+  const pastExpandEl = document.getElementById('pastExpandToggle');
+  if (pastExpandEl && cfg.pastExpandEnabled !== undefined) pastExpandEl.checked = cfg.pastExpandEnabled;
+  renderAlbumsAdmin();
+  renderEventsAdmin();
+  renderGalleryAdmin();
+  loadVisibilityToggles(cfg);
+  bindSidebarTabs();
+  bindActions();
+
+  showToast('Data loaded ✓');
+}
+
+// ── SIDEBAR TABS ──────────────────────────────────────────────
+function bindSidebarTabs() {
+  document.querySelectorAll('.sidebar-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      const sec = document.getElementById('tab-' + btn.dataset.tab);
+      if (sec) sec.classList.add('active');
+    });
+  });
+}
+
+// ── BIND ACTIONS ──────────────────────────────────────────────
+function bindActions() {
+  document.getElementById('heroMode')?.addEventListener('change', function() {
+    document.getElementById('heroLogoField').style.display = this.value === 'logo' ? 'block' : 'none';
+  });
+
+  document.getElementById('heroLogoFile')?.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = async () => { await dbSet('logoDataUrl', r.result); showToast('Logo uploaded ✓'); };
+    r.readAsDataURL(file);
+  });
+
+  document.getElementById('heroVideoFile')?.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    showToast('Video selected — save URL below for permanent use');
+  });
+
+  document.getElementById('bioPhotoFile')?.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = async () => { await dbSet('bioPhotoDataUrl', r.result); showToast('Photo uploaded ✓'); };
+    r.readAsDataURL(file);
+  });
+
+  document.getElementById('galleryUploadFile')?.addEventListener('change', function() {
+    [...this.files].forEach(file => {
+      const r = new FileReader();
+      r.onload = () => {
+        const cat = document.getElementById('galleryNewCat')?.value || 'promo';
+        const cap = document.getElementById('galleryNewCaption')?.value || file.name.replace(/\.[^.]+$/, '');
+        galleryItems.push({ url: r.result, caption: cap, cat });
+        renderGalleryAdmin();
+        showToast('Photo added — click Save All to keep it ✓');
+      };
+      r.readAsDataURL(file);
+    });
+    this.value = '';
+  });
+
+  document.getElementById('addGalleryUrlBtn')?.addEventListener('click', () => {
+    const url = document.getElementById('galleryNewUrl')?.value?.trim();
+    const cat = document.getElementById('galleryNewCat')?.value || 'promo';
+    const cap = document.getElementById('galleryNewCaption')?.value || 'Photo';
+    if (!url) { showToast('Enter an image URL first', 'rgba(200,0,0,0.85)'); return; }
+    galleryItems.push({ url, caption: cap, cat });
+    renderGalleryAdmin();
+    document.getElementById('galleryNewUrl').value = '';
+    document.getElementById('galleryNewCaption').value = '';
+    showToast('Photo added — click Save All to keep it ✓');
+  });
+
+  document.getElementById('addAlbumBtn')?.addEventListener('click', () => {
+    albums.push({ title: 'New Release', type: 'Album · 2025', desc: '', tracks: '', artUrl: '', downloadLink: '', streamLink: '' });
+    renderAlbumsAdmin();
+  });
+
+  document.getElementById('addUpcomingBtn')?.addEventListener('click', () => {
+    upcomingEvents.push({ name: 'New Event', day: '01', month: 'Jan 2026', venue: '', location: '', desc: '', ticketLink: '', posterUrl: '' });
+    renderEventsAdmin();
+  });
+  document.getElementById('addPastBtn')?.addEventListener('click', () => {
+    pastEvents.push({ name: 'Past Event', day: '01', month: 'Jan 2025', venue: '', location: '', desc: '', posterUrl: '' });
+    renderEventsAdmin();
+  });
+
+  document.getElementById('saveAllBtn')?.addEventListener('click', saveAll);
+
+  document.getElementById('resetAllBtn')?.addEventListener('click', () => {
+    if (confirm('Reset ALL site settings to defaults? This cannot be undone.')) {
+      const savedPw = local.get('adminPassword');
+      localStorage.clear();
+      if (savedPw) local.set('adminPassword', savedPw);
+      sessionStorage.removeItem(SESSION_KEY);
+      location.reload();
+    }
+  });
+
+  document.getElementById('changePwBtn')?.addEventListener('click', () => {
+    const current = document.getElementById('pwCurrent')?.value;
+    const newPw   = document.getElementById('pwNew')?.value;
+    const confirm = document.getElementById('pwConfirm')?.value;
+    const success = document.getElementById('pwSuccess');
+    const error   = document.getElementById('pwError');
+    success.textContent = ''; error.textContent = '';
+    const savedPw = local.get('adminPassword') || DEFAULT_PASSWORD;
+    if (current !== savedPw) { error.textContent = 'Current password is incorrect.'; return; }
+    if (!newPw || newPw.length < 6) { error.textContent = 'New password must be at least 6 characters.'; return; }
+    if (newPw !== confirm) { error.textContent = 'New passwords do not match.'; return; }
+    local.set('adminPassword', newPw);
+    success.textContent = 'Password updated successfully ✓';
+    ['pwCurrent','pwNew','pwConfirm'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  });
+}
+
+// ── LOAD FIELDS ──────────────────────────────────────────────
+function loadFields(cfg) {
+  const ids = [
+    'heroMode','heroLogoUrl','heroVideoUrl','heroVideoOpacity',
+    'heroTagline','heroSub','heroCta1Text','heroCta1Link','heroCta2Text','latestRelease',
+    'heroStat1','heroStat2','heroStat3',
+    'heroStatLbl1','heroStatLbl2','heroStatLbl3',
+    'heroStatIcon1','heroStatIcon2','heroStatIcon3',
+    'marqueeText','genreTags',
+    'artistName','copyrightText',
+    'bioHeading','bioPara1','bioPara2','bioPara3','bioPullQuote','bioPhotoUrl',
+    'bioCity','bioGenre','bioSince','bioInstruments','bioReleases',
+    'socialIG','socialSpotify','socialYT','socialSC','socialAM',
+    'emailBooking','emailPress','emailGeneral',
+    'epkOverview','statStreams','statIG','statYT','statReleases',
+    'pressQ1','pressQ1Src','pressQ2','pressQ2Src',
+    'epkPdfLink','epkPhotosLink','epkBioLink','epkLogoLink',
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && cfg[id] !== undefined) el.value = cfg[id];
+  });
+  const colorEl = document.getElementById('accentColor');
+  if (colorEl && cfg.accentColor) colorEl.value = cfg.accentColor;
+  ['showLatestStrip','showMarquee','showStat1','showStat2','showStat3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && cfg[id] !== undefined) el.checked = cfg[id];
+  });
+  if (cfg.heroMode === 'logo') {
+    const lf = document.getElementById('heroLogoField');
+    if (lf) lf.style.display = 'block';
+  }
+}
+
+// ── SAVE ALL ─────────────────────────────────────────────────
+async function saveAll() {
+  showToast('Saving…', 'rgba(26,106,255,0.85)');
+  const btn = document.getElementById('saveAllBtn');
+  if (btn) btn.disabled = true;
+
+  const cfg = {};
+  const ids = [
+    'heroMode','heroLogoUrl','heroVideoUrl','heroVideoOpacity',
+    'heroTagline','heroSub','heroCta1Text','heroCta1Link','heroCta2Text','latestRelease',
+    'heroStat1','heroStat2','heroStat3',
+    'heroStatLbl1','heroStatLbl2','heroStatLbl3',
+    'heroStatIcon1','heroStatIcon2','heroStatIcon3',
+    'marqueeText','genreTags',
+    'artistName','copyrightText',
+    'bioHeading','bioPara1','bioPara2','bioPara3','bioPullQuote','bioPhotoUrl',
+    'bioCity','bioGenre','bioSince','bioInstruments','bioReleases',
+    'socialIG','socialSpotify','socialYT','socialSC','socialAM',
+    'emailBooking','emailPress','emailGeneral',
+    'epkOverview','statStreams','statIG','statYT','statReleases',
+    'pressQ1','pressQ1Src','pressQ2','pressQ2Src',
+    'epkPdfLink','epkPhotosLink','epkBioLink','epkLogoLink',
+  ];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) cfg[id] = el.value; });
+  const colorEl = document.getElementById('accentColor');
+  if (colorEl) cfg.accentColor = colorEl.value;
+  ['showLatestStrip','showMarquee','showStat1','showStat2','showStat3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) cfg[id] = el.checked;
+  });
+
+  // Visibility toggles
+  const visToggles = {};
+  document.querySelectorAll('.page-hide-toggle').forEach(el => { visToggles[el.dataset.key] = el.checked; });
+  if (visToggles.showLatestStrip !== undefined) cfg.showLatestStrip = visToggles.showLatestStrip;
+  if (visToggles.showMarquee !== undefined) cfg.showMarquee = visToggles.showMarquee;
+  if (visToggles.showStat1 !== undefined) cfg.showStat1 = visToggles.showStat1;
+  if (visToggles.showStat2 !== undefined) cfg.showStat2 = visToggles.showStat2;
+  if (visToggles.showStat3 !== undefined) cfg.showStat3 = visToggles.showStat3;
+
+  cfg.albums = albums;
+  cfg.visToggles = visToggles;
+
+  // Past expand toggle
+  const pastExpandEl = document.getElementById('pastExpandToggle');
+  if (pastExpandEl) cfg.pastExpandEnabled = pastExpandEl.checked;
+
+  try {
+    await Promise.all([
+      dbSet('config', cfg),
+      dbSaveEvents(upcomingEvents, pastEvents),
+      dbSaveGallery(galleryItems),
+    ]);
+    showToast('All changes saved to database ✓');
+  } catch (err) {
+    showToast('Save failed — check internet connection', 'rgba(200,0,0,0.85)');
+    console.error(err);
+  }
+
+  if (btn) btn.disabled = false;
+}
+
+// ── VISIBILITY TOGGLES ────────────────────────────────────────
+function loadVisibilityToggles(cfg) {
+  const vis = cfg.visToggles || {};
+  document.querySelectorAll('.page-hide-toggle').forEach(el => {
+    const key = el.dataset.key;
+    if (vis[key] !== undefined) el.checked = vis[key];
+  });
+}
+
+// ── ALBUMS ADMIN ──────────────────────────────────────────────
+function renderAlbumsAdmin() {
+  const list = document.getElementById('albumList');
+  if (!list) return;
+
+  list.innerHTML = albums.map((alb, i) => `
+    <div class="album-admin-item">
+      <div class="album-admin-header">
+        <span class="album-admin-name">${esc(alb.title || 'Untitled')}</span>
+        <button class="delete-btn" data-alb-del="${i}">🗑 Delete</button>
+      </div>
+      <div class="field-row" style="margin-bottom:.6rem">
+        <div class="field" style="margin:0"><label>Title</label><input type="text" value="${esc(alb.title||'')}" data-alb="${i}" data-f="title"></div>
+        <div class="field" style="margin:0"><label>Type &amp; Year</label><input type="text" value="${esc(alb.type||'')}" placeholder="Album · 2024" data-alb="${i}" data-f="type"></div>
+      </div>
+      <div class="field" style="margin-bottom:.6rem"><label>Description</label><textarea data-alb="${i}" data-f="desc">${esc(alb.desc||'')}</textarea></div>
+      <div class="field" style="margin-bottom:.6rem"><label>Track List (one per line)</label><textarea data-alb="${i}" data-f="tracks">${esc(alb.tracks||'')}</textarea></div>
+      <div class="field-row" style="margin-bottom:.6rem">
+        <div class="field" style="margin:0"><label>Free Download URL</label><input type="url" value="${esc(alb.downloadLink||'')}" placeholder="https://..." data-alb="${i}" data-f="downloadLink"></div>
+        <div class="field" style="margin:0"><label>Streaming URL</label><input type="url" value="${esc(alb.streamLink||'')}" placeholder="https://..." data-alb="${i}" data-f="streamLink"></div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="margin:0"><label>Album Art — upload</label><input type="file" accept="image/*" data-alb-art="${i}"></div>
+        <div class="field" style="margin:0"><label>Album Art — URL</label><input type="url" value="${esc(alb.artUrl||'')}" placeholder="https://..." data-alb="${i}" data-f="artUrl"></div>
+      </div>
+
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:.7rem">Button Controls</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+
+          <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.8rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:.78rem;color:var(--off)">Download Button</span>
+              <label class="toggle-switch" style="width:36px;height:20px">
+                <input type="checkbox" data-alb="${i}" data-f="showDownloadBtn" ${alb.showDownloadBtn === false ? '' : 'checked'}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field" style="margin:0"><label>Button Label</label><input type="text" value="${esc(alb.downloadBtnLabel||'↓ Free Download')}" placeholder="↓ Free Download" data-alb="${i}" data-f="downloadBtnLabel"></div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:.8rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:.78rem;color:var(--off)">Stream Button</span>
+              <label class="toggle-switch" style="width:36px;height:20px">
+                <input type="checkbox" data-alb="${i}" data-f="showStreamBtn" ${alb.showStreamBtn === false ? '' : 'checked'}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field" style="margin:0"><label>Button Label</label><input type="text" value="${esc(alb.streamBtnLabel||'Stream on Spotify')}" placeholder="Stream on Spotify" data-alb="${i}" data-f="streamBtnLabel"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  `).join('') || '<p style="font-size:.82rem;color:var(--dim)">No albums yet.</p>';
+
+  list.querySelectorAll('[data-alb][data-f]').forEach(input => {
+    const evt = input.type === 'checkbox' ? 'change' : 'input';
+    input.addEventListener(evt, () => {
+      albums[parseInt(input.dataset.alb)][input.dataset.f] = input.type === 'checkbox' ? input.checked : input.value;
+      if (input.dataset.f === 'title') {
+        const el = input.closest('.album-admin-item')?.querySelector('.album-admin-name');
+        if (el) el.textContent = input.value || 'Untitled';
+      }
+    });
+  });
+
+  list.querySelectorAll('[data-alb-art]').forEach(fileInput => {
+    fileInput.addEventListener('change', () => {
+      const i = parseInt(fileInput.dataset.albArt);
+      const file = fileInput.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = async () => {
+        albums[i].artUrl = r.result;
+        await dbSet('albumArt_' + i, r.result);
+        showToast('Art uploaded ✓');
+      };
+      r.readAsDataURL(file);
+    });
+  });
+
+  list.querySelectorAll('[data-alb-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      albums.splice(parseInt(btn.dataset.albDel), 1);
+      renderAlbumsAdmin();
+    });
+  });
+}
+
+// ── EVENTS ADMIN ─────────────────────────────────────────────
+function renderEventsAdmin() {
+  const upList   = document.getElementById('upcomingEventsList');
+  const pastList = document.getElementById('pastEventsList');
+  if (!upList || !pastList) return;
+
+  const renderList = (events, type) => events.map((ev, i) => `
+    <div class="event-admin-item" draggable="true" data-type="${type}" data-index="${i}">
+      <div class="event-admin-header">
+        <span class="drag-handle" title="Drag to reorder">⠿⠿</span>
+        <span class="event-admin-name">${esc(ev.name || 'Event')}</span>
+        <button class="delete-btn" data-type="${type}" data-index="${i}">🗑 Delete</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+        <div class="field" style="margin:0"><label>Event Name</label><input type="text" value="${esc(ev.name||'')}" data-ev="${type}" data-i="${i}" data-f="name"></div>
+        <div class="field" style="margin:0"><label>Day</label><input type="text" value="${esc(ev.day||'')}" placeholder="14" data-ev="${type}" data-i="${i}" data-f="day"></div>
+        <div class="field" style="margin:0"><label>Month &amp; Year</label><input type="text" value="${esc(ev.month||'')}" placeholder="Aug 2025" data-ev="${type}" data-i="${i}" data-f="month"></div>
+        <div class="field" style="margin:0"><label>Venue</label><input type="text" value="${esc(ev.venue||'')}" data-ev="${type}" data-i="${i}" data-f="venue"></div>
+        <div class="field" style="margin:0;grid-column:1/-1"><label>Location</label><input type="text" value="${esc(ev.location||'')}" placeholder="📍 Vancouver, Canada" data-ev="${type}" data-i="${i}" data-f="location"></div>
+        <div class="field" style="margin:0;grid-column:1/-1"><label>Description</label><textarea data-ev="${type}" data-i="${i}" data-f="desc">${esc(ev.desc||'')}</textarea></div>
+        ${type==='upcoming' ? `<div class="field" style="margin:0;grid-column:1/-1"><label>Ticket Link</label><input type="url" value="${esc(ev.ticketLink||'')}" placeholder="https://..." data-ev="${type}" data-i="${i}" data-f="ticketLink"></div>` : ''}
+        <div class="field" style="margin:0;grid-column:1/-1">
+          <label>Event Poster / Thumbnail</label>
+          <div style="display:flex;align-items:center;gap:.8rem;flex-wrap:wrap">
+            ${ev.posterUrl ? `<img src="${esc(ev.posterUrl)}" class="event-poster-preview" alt="poster">` : ''}
+            <input type="file" accept="image/*" data-ev-poster="${type}" data-pi="${i}" style="flex:1;min-width:0">
+          </div>
+          <div class="field" style="margin:.4rem 0 0"><label>Or paste poster URL</label><input type="url" value="${esc(ev.posterUrl||'')}" placeholder="https://..." data-ev="${type}" data-i="${i}" data-f="posterUrl"></div>
+        </div>
+        ${type==='past' ? `
+        <div class="field" style="margin:0;grid-column:1/-1">
+          <label>Show Photos (add up to 3 photo URLs)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+            <input type="url" value="${esc((ev.photos||[])[0]||'')}" placeholder="Photo 1 URL" data-ev="${type}" data-i="${i}" data-f="photo0">
+            <input type="url" value="${esc((ev.photos||[])[1]||'')}" placeholder="Photo 2 URL" data-ev="${type}" data-i="${i}" data-f="photo1">
+            <input type="url" value="${esc((ev.photos||[])[2]||'')}" placeholder="Photo 3 URL" data-ev="${type}" data-i="${i}" data-f="photo2">
+          </div>
+          <small>These show when someone clicks to expand the past event (requires Past Expand toggle ON)</small>
+        </div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  upList.innerHTML   = renderList(upcomingEvents, 'upcoming') || '<p style="font-size:.82rem;color:var(--dim)">No upcoming events.</p>';
+  pastList.innerHTML = renderList(pastEvents, 'past')         || '<p style="font-size:.82rem;color:var(--dim)">No past events.</p>';
+
+  // Input listeners
+  document.querySelectorAll('[data-ev][data-f]').forEach(input => {
+    input.addEventListener('input', () => {
+      const t = input.dataset.ev, i = parseInt(input.dataset.i), f = input.dataset.f;
+      const arr = t === 'upcoming' ? upcomingEvents : pastEvents;
+      if (f.startsWith('photo')) {
+        if (!arr[i].photos) arr[i].photos = [];
+        const idx = parseInt(f.replace('photo',''));
+        arr[i].photos[idx] = input.value;
+      } else {
+        arr[i][f] = input.value;
+      }
+      if (f === 'name') {
+        const el = input.closest('.event-admin-item')?.querySelector('.event-admin-name');
+        if (el) el.textContent = input.value || 'Event';
+      }
+    });
+  });
+
+  // Poster file upload
+  document.querySelectorAll('[data-ev-poster]').forEach(fileInput => {
+    fileInput.addEventListener('change', () => {
+      const t = fileInput.dataset.evPoster, i = parseInt(fileInput.dataset.pi);
+      const file = fileInput.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        const arr = t === 'upcoming' ? upcomingEvents : pastEvents;
+        arr[i].posterUrl = r.result;
+        renderEventsAdmin();
+        showToast('Poster uploaded ✓');
+      };
+      r.readAsDataURL(file);
+    });
+  });
+
+  // Delete buttons
+  document.querySelectorAll('.delete-btn[data-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.type, i = parseInt(btn.dataset.index);
+      if (t === 'upcoming') upcomingEvents.splice(i, 1);
+      else pastEvents.splice(i, 1);
+      renderEventsAdmin();
+    });
+  });
+
+  // Drag-to-reorder
+  bindEventDrag(upList, upcomingEvents);
+  bindEventDrag(pastList, pastEvents);
+}
+
+function bindEventDrag(container, arr) {
+  let dragIdx = null;
+  container.querySelectorAll('.event-admin-item').forEach((item, i) => {
+    item.addEventListener('dragstart', e => {
+      dragIdx = i;
+      setTimeout(() => item.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      container.querySelectorAll('.event-admin-item').forEach(el => el.classList.remove('drag-over'));
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      container.querySelectorAll('.event-admin-item').forEach(el => el.classList.remove('drag-over'));
+      if (i !== dragIdx) item.classList.add('drag-over');
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragIdx === null || dragIdx === i) return;
+      const [moved] = arr.splice(dragIdx, 1);
+      arr.splice(i, 0, moved);
+      dragIdx = null;
+      renderEventsAdmin();
+    });
+  });
+}
+
+// ── GALLERY ADMIN ─────────────────────────────────────────────
+function renderGalleryAdmin() {
+  const grid    = document.getElementById('galleryAdminGrid');
+  const countEl = document.getElementById('galleryCount');
+  if (!grid) return;
+  if (countEl) countEl.textContent = galleryItems.length;
+
+  if (!galleryItems.length) {
+    grid.innerHTML = '<p style="font-size:.82rem;color:var(--dim);margin-top:.5rem">No photos yet.</p>';
+    return;
+  }
+  grid.innerHTML = `<div class="gallery-thumb-grid">
+    ${galleryItems.map((item, i) => `
+      <div class="gallery-thumb">
+        <img src="${esc(item.url)}" alt="${esc(item.caption||'')}">
+        <button class="del-thumb" data-gi="${i}">✕</button>
+      </div>
+    `).join('')}
+  </div>`;
+  grid.querySelectorAll('.del-thumb').forEach(btn => {
+    btn.addEventListener('click', () => {
+      galleryItems.splice(parseInt(btn.dataset.gi), 1);
+      renderGalleryAdmin();
+    });
+  });
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── DEFAULT DATA ──────────────────────────────────────────────
+function defaultAlbums() {
+  return [
+    { title: 'Album Title Here', type: 'Album · 2024', desc: 'A short description of your album goes here.', tracks: 'Track Name One\nTrack Name Two\nTrack Name Three\nTrack Name Four\nTrack Name Five', artUrl: '', downloadLink: '', streamLink: '' },
+    { title: 'Previous EP Title', type: 'EP · 2023', desc: 'Description of this EP or single.', tracks: 'Track Name One\nTrack Name Two\nTrack Name Three', artUrl: '', downloadLink: '', streamLink: '' },
+  ];
+}
+function defaultUpcoming() {
+  return [
+    { name: 'Summer Fusion Night', day: '14', month: 'Aug 2025', venue: 'The Electric Ballroom', location: '📍 Mumbai, India', desc: 'An electrifying night blending Bollywood vibes with deep electronic beats.', ticketLink: '#', posterUrl: '' },
+    { name: 'Desi Beats Festival',  day: '22', month: 'Sep 2025', venue: 'Phoenix Grounds',       location: '📍 Bangalore, India', desc: 'A full-day festival celebrating South Asian sounds with modern electronic production.', ticketLink: '#', posterUrl: '' },
+  ];
+}
+function defaultPast() {
+  return [
+    { name: 'Electric Bollywood — Live Set', day: '03', month: 'Mar 2025', venue: 'Blue Frog', location: '📍 Mumbai, India', desc: 'Sold-out show at Blue Frog. An unforgettable night — thank you Mumbai.', posterUrl: '', photos: [] },
+  ];
+}
+</script>
+</body>
+</html>
