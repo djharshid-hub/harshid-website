@@ -161,7 +161,12 @@ async function loadSiteData() {
 
   function parseEventDate(ev) {
     if (!ev.day || !ev.month) return null;
-    return new Date(`${ev.month} ${ev.day}`);
+    // ev.month = "Apr 2026", ev.day = "24"
+    // Build "24 Apr 2026" which all browsers parse reliably
+    try {
+      const d = new Date(`${ev.day} ${ev.month}`);
+      return isNaN(d.getTime()) ? null : d;
+    } catch(e) { return null; }
   }
 
   const stillUpcoming = [];
