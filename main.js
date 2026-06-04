@@ -10,6 +10,18 @@ const HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_
 
 // ── HELPERS ──────────────────────────────────────────────────
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
+
+// ── EXTERNAL LINKS → NEW TAB ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('a[href]').forEach(a => {
+    const href = a.getAttribute('href');
+    // Open in new tab if it's an external URL (http/https) or a mailto
+    if (href && (href.startsWith('http') || href.startsWith('mailto'))) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+    }
+  });
+});
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
 async function dbGet(key) {
@@ -105,6 +117,22 @@ if (lightbox && lightboxImg) {
   });
   lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
 }
+
+// ── EVENT CARDS EXPAND ───────────────────────────────────────
+function bindEventCards() {
+  $$('.event-card[data-target]').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.getAttribute('data-target');
+      const panel = document.getElementById(id);
+      if (!panel) return;
+      const isOpen = panel.classList.contains('open');
+      $$('.event-expanded').forEach(p => p.classList.remove('open'));
+      $$('.event-card').forEach(c => c.classList.remove('expanded-open'));
+      if (!isOpen) { panel.classList.add('open'); card.classList.add('expanded-open'); }
+    });
+  });
+}
+bindEventCards();
 
 // ── CONTACT FORM ─────────────────────────────────────────────
 const contactForm = $('#contactForm');
@@ -459,7 +487,7 @@ function applyLogoMode(cfg, logoDataUrl) {
   if (bgName && cfg.artistName) bgName.textContent = cfg.artistName;
 }
 
-function applyEventsToPage(upcoming, past) {
+function applyEventsToPage(upcoming, past, pastExpandEnabled) {
   const upEl   = $('#upcomingEventsList');
   const pastEl = $('#pastEventsList');
 
@@ -468,44 +496,49 @@ function applyEventsToPage(upcoming, past) {
     : `<div class="event-poster-thumb"><span class="event-poster-emoji">${emoji}</span></div>`;
 
   if (upEl && upcoming.length) {
-    upEl.innerHTML = upcoming.map(ev => `
-      <div class="event-card upcoming-card fade-in">
+    upEl.innerHTML = upcoming.map((ev, i) => `
+      <div class="event-card fade-in" data-target="uev${i}">
         ${posterThumb(ev.posterUrl, '🎤')}
-        <div class="event-card-body">
-          <div class="event-date-block">
-            <div class="event-day">${ev.day||'TBD'}</div>
-            <div class="event-month">${ev.month||''}</div>
-          </div>
-          <div class="event-info">
-            <h3>${ev.name||'Event'}</h3>
-            <div class="event-venue">${ev.venue||''}</div>
-            <div class="event-location">${ev.location||''}</div>
-          </div>
+        <div style="display:flex;align-items:center;gap:.9rem;flex:1">
+          <div class="event-date-block"><div class="event-day">${ev.day||'TBD'}</div><div class="event-month">${ev.month||''}</div></div>
+          <div class="event-info"><h3>${ev.name||'Event'}</h3><div class="event-venue">${ev.venue||''}</div><div class="event-location">${ev.location||''}</div></div>
+          <span class="event-toggle-icon">+</span>
         </div>
-        ${ev.ticketLink ? `<div class="event-card-footer"><a href="${ev.ticketLink}" class="btn-primary event-ticket-btn" target="_blank">Get Tickets</a></div>` : ''}
+      </div>
+      <div class="event-expanded" id="uev${i}">
+        <p>${ev.desc||''}</p>
+        ${ev.ticketLink ? `<a href="${ev.ticketLink}" class="btn-primary" style="display:inline-block;margin-bottom:1.5rem" target="_blank">Get Tickets</a>` : ''}
       </div>
     `).join('');
     $$('.fade-in', upEl).forEach(el => scrollObs.observe(el));
+    bindEventCards();
   }
 
   if (pastEl && past.length) {
-    pastEl.innerHTML = past.map(ev => `
-      <div class="event-card past-event-card fade-in">
-        ${posterThumb(ev.posterUrl, '📸')}
-        <div class="event-card-body">
-          <div class="event-date-block">
-            <div class="event-day">${ev.day||'TBD'}</div>
-            <div class="event-month">${ev.month||''}</div>
-          </div>
-          <div class="event-info">
-            <h3>${ev.name||'Event'}</h3>
-            <div class="event-venue">${ev.venue||''}</div>
-            <div class="event-location">${ev.location||''}</div>
+    const canExpand = pastExpandEnabled !== false;
+    pastEl.innerHTML = past.map((ev, i) => {
+      const photos = (ev.photos || []).filter(Boolean);
+      const photoHtml = photos.length
+        ? photos.map(url => `<div class="event-photo-placeholder-lg"><img src="${url}" alt="Show Photo"></div>`).join('')
+        : '';
+      return `
+        <div class="event-card fade-in past-event-card${canExpand ? '' : ' no-expand'}" ${canExpand ? `data-target="pev${i}"` : ''}>
+          ${posterThumb(ev.posterUrl, '📸')}
+          <div style="display:flex;align-items:center;gap:.9rem;flex:1">
+            <div class="event-date-block"><div class="event-day">${ev.day||'TBD'}</div><div class="event-month">${ev.month||''}</div></div>
+            <div class="event-info"><h3>${ev.name||'Event'}</h3><div class="event-venue">${ev.venue||''}</div><div class="event-location">${ev.location||''}</div></div>
+            ${canExpand ? '<span class="event-toggle-icon past-toggle">+</span>' : '<span></span>'}
           </div>
         </div>
-      </div>
-    `).join('');
+        ${canExpand ? `
+        <div class="event-expanded" id="pev${i}">
+          ${ev.desc ? `<p>${ev.desc}</p>` : ''}
+          ${photoHtml ? `<div class="event-expanded-inner">${photoHtml}</div>` : ''}
+        </div>` : ''}
+      `;
+    }).join('');
     $$('.fade-in', pastEl).forEach(el => scrollObs.observe(el));
+    if (canExpand) bindEventCards();
   }
 }
 
