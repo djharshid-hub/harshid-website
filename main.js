@@ -87,7 +87,10 @@ $$('.filter-btn').forEach(btn => {
     btn.classList.add('active');
     const filter = btn.getAttribute('data-filter');
     $$('.gallery-item').forEach(item => {
-      item.style.display = (filter === 'all' || item.getAttribute('data-cat') === filter) ? '' : 'none';
+      const cat = item.getAttribute('data-cat') || '';
+      // normalize legacy cats
+      const normCat = cat === 'studio' ? 'photoshoot' : cat;
+      item.style.display = (filter === 'all' || normCat === filter) ? '' : 'none';
     });
   });
 });
@@ -532,15 +535,21 @@ function applyEventsToPage(upcoming, past) {
 function applyGalleryToPage(galleryItems) {
   const grid = $('#galleryGrid');
   if (!grid || !galleryItems.length) return;
+  // Remove placeholder items (ones without real images)
   $$('.gallery-item', grid).forEach(item => { if (item.querySelector('.gallery-placeholder')) item.remove(); });
+  // Clear any previously injected DB items so we can re-render in correct order
+  $$('.gallery-item[data-gid]', grid).forEach(el => el.remove());
+  // Render in sort_order (as returned from DB, already sorted asc)
   galleryItems.forEach((item, i) => {
-    if (document.querySelector(`.gallery-item[data-gid="${i}"]`)) return;
+    let cat = item.cat || 'live';
+    if (cat === 'studio') cat = 'photoshoot';
+    if (cat === 'promo') cat = 'live'; // migrate old promo → live
     const div = document.createElement('div');
     div.className = 'gallery-item fade-in';
-    div.dataset.cat = item.cat || 'promo';
+    div.dataset.cat = cat;
     div.dataset.gid = i;
     div.innerHTML = `<img src="${item.url}" alt="${item.caption||''}"><div class="gallery-item-overlay"></div><div class="gallery-caption">${item.caption||''}</div>`;
-    grid.insertBefore(div, grid.firstChild);
+    grid.appendChild(div);
     scrollObs.observe(div);
   });
 }

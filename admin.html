@@ -113,6 +113,22 @@
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .gallery-thumb .del-thumb { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.7); border: none; border-radius: 50%; color: #ff3355; width: 22px; height: 22px; font-size: .7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
+    /* gallery drag list */
+    .gallery-drag-list { display: flex; flex-direction: column; gap: .5rem; margin-top: .5rem; }
+    .gallery-drag-item { display: flex; align-items: center; gap: .8rem; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px; padding: .6rem .8rem; cursor: default; transition: opacity .15s, box-shadow .15s; }
+    .gallery-drag-item[draggable="true"] { cursor: grab; }
+    .gallery-drag-item.dragging { opacity: .35; box-shadow: 0 0 0 2px var(--blue); }
+    .gallery-drag-item.drag-over { box-shadow: 0 -3px 0 0 var(--cyan); }
+    .gallery-drag-handle { cursor: grab; color: var(--dim); font-size: 1rem; padding: 0 .2rem; user-select: none; flex-shrink: 0; }
+    .gallery-drag-handle:active { cursor: grabbing; }
+    .gallery-drag-thumb { width: 52px; height: 52px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+    .gallery-drag-fields { flex: 1; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; min-width: 0; }
+    .gallery-drag-fields input[type=text] { flex: 1; min-width: 120px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; color: var(--white); font-family: 'Barlow', sans-serif; font-size: .82rem; padding: .4rem .7rem; outline: none; transition: border-color .2s; }
+    .gallery-drag-fields input[type=text]:focus { border-color: var(--blue); }
+    .gallery-drag-fields select { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; color: var(--white); font-family: 'Barlow', sans-serif; font-size: .82rem; padding: .4rem .7rem; outline: none; cursor: pointer; appearance: none; transition: border-color .2s; }
+    .gallery-drag-fields select:focus { border-color: var(--blue); }
+    .gallery-drag-order { font-family: 'Barlow Condensed', sans-serif; font-size: .68rem; color: var(--dim); letter-spacing: .1em; flex-shrink: 0; min-width: 26px; text-align: center; }
+
     /* page hides */
     .hide-item { display: flex; align-items: center; justify-content: space-between; padding: .65rem 0; border-bottom: 1px solid rgba(26,106,255,.08); }
     .hide-item-label { font-family: 'Barlow Condensed', sans-serif; font-size: .88rem; color: var(--off); }
@@ -326,14 +342,15 @@
           <div class="field"><label>Category</label>
             <select id="galleryNewCat">
               <option value="live">Live Shows</option>
-              <option value="studio">Studio</option>
+              <option value="photoshoot">Photoshoot</option>
             </select>
           </div>
         </div>
         <div class="field"><label>Or paste an image URL</label><input type="url" id="galleryNewUrl" placeholder="https://..."></div>
         <button class="add-btn" id="addGalleryUrlBtn">+ Add from URL</button>
         <hr class="divider">
-        <div class="sub-heading">Current Gallery (<span id="galleryCount">0</span> photos)</div>
+        <div class="sub-heading">Current Gallery (<span id="galleryCount">0</span> photos) <span style="font-size:.7rem;color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">— drag ⠿ to reorder</span></div>
+        <p style="font-size:.78rem;color:var(--dim);margin-bottom:.8rem">Drag photos to set display order. Change category or caption per photo. First photo in list appears first on the gallery page.</p>
         <div id="galleryAdminGrid"></div>
       </div>
 
@@ -559,7 +576,13 @@ async function dbGetGallery() {
 async function dbSaveGallery(items) {
   await fetch(`${SUPABASE_URL}/rest/v1/gallery?id=gt.0`, { method: 'DELETE', headers: HEADERS });
   if (!items.length) return;
-  const rows = items.map((item, i) => ({ url: item.url, caption: item.caption||'', category: item.cat||'promo', sort_order: i }));
+  // Normalize legacy 'studio' and 'promo' categories
+  const rows = items.map((item, i) => {
+    let cat = item.cat || 'live';
+    if (cat === 'studio') cat = 'photoshoot';
+    if (cat === 'promo') cat = 'live';
+    return { url: item.url, caption: item.caption||'', category: cat, sort_order: i };
+  });
   await fetch(`${SUPABASE_URL}/rest/v1/gallery`, { method: 'POST', headers: { ...HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(rows) });
 }
 
@@ -639,7 +662,12 @@ async function initAdminPanel() {
 
   // Load gallery
   const galRows = await dbGetGallery();
-  galleryItems = galRows.map(r => ({ url: r.url, caption: r.caption, cat: r.category }));
+  galleryItems = galRows.map(r => {
+    let cat = r.category || 'live';
+    if (cat === 'studio') cat = 'photoshoot';
+    if (cat === 'promo') cat = 'live';
+    return { url: r.url, caption: r.caption, cat };
+  });
 
   // Load albums from config
   albums = cfg.albums || defaultAlbums();
@@ -1093,20 +1121,79 @@ function renderGalleryAdmin() {
   if (countEl) countEl.textContent = galleryItems.length;
 
   if (!galleryItems.length) {
-    grid.innerHTML = '<p style="font-size:.82rem;color:var(--dim);margin-top:.5rem">No photos yet.</p>';
+    grid.innerHTML = '<p style="font-size:.82rem;color:var(--dim);margin-top:.5rem">No photos yet. Upload or add a URL above.</p>';
     return;
   }
-  grid.innerHTML = `<div class="gallery-thumb-grid">
+
+  grid.innerHTML = `<div class="gallery-drag-list">
     ${galleryItems.map((item, i) => `
-      <div class="gallery-thumb">
-        <img src="${esc(item.url)}" alt="${esc(item.caption||'')}">
-        <button class="del-thumb" data-gi="${i}">✕</button>
+      <div class="gallery-drag-item" draggable="true" data-gi="${i}">
+        <span class="gallery-drag-handle" title="Drag to reorder">⠿</span>
+        <span class="gallery-drag-order">${i + 1}</span>
+        <img class="gallery-drag-thumb" src="${esc(item.url)}" alt="">
+        <div class="gallery-drag-fields">
+          <input type="text" class="gal-cap" data-gi="${i}" value="${esc(item.caption||'')}" placeholder="Caption">
+          <select class="gal-cat" data-gi="${i}">
+            <option value="live"${item.cat==='live'?' selected':''}>Live Shows</option>
+            <option value="photoshoot"${(item.cat==='photoshoot'||item.cat==='studio')?' selected':''}>Photoshoot</option>
+          </select>
+        </div>
+        <button class="del-thumb" data-gi="${i}" title="Remove">✕</button>
       </div>
     `).join('')}
   </div>`;
+
+  // Bind caption changes
+  grid.querySelectorAll('.gal-cap').forEach(inp => {
+    inp.addEventListener('input', () => {
+      galleryItems[parseInt(inp.dataset.gi)].caption = inp.value;
+    });
+  });
+
+  // Bind category changes
+  grid.querySelectorAll('.gal-cat').forEach(sel => {
+    sel.addEventListener('change', () => {
+      galleryItems[parseInt(sel.dataset.gi)].cat = sel.value;
+    });
+  });
+
+  // Bind delete
   grid.querySelectorAll('.del-thumb').forEach(btn => {
     btn.addEventListener('click', () => {
       galleryItems.splice(parseInt(btn.dataset.gi), 1);
+      renderGalleryAdmin();
+    });
+  });
+
+  // Bind drag-to-reorder
+  bindGalleryDrag(grid.querySelector('.gallery-drag-list'));
+}
+
+function bindGalleryDrag(list) {
+  if (!list) return;
+  let dragIdx = null;
+  list.querySelectorAll('.gallery-drag-item').forEach((item, i) => {
+    item.setAttribute('draggable', 'true');
+    item.addEventListener('dragstart', e => {
+      dragIdx = i;
+      setTimeout(() => item.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      list.querySelectorAll('.gallery-drag-item').forEach(el => el.classList.remove('drag-over'));
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      list.querySelectorAll('.gallery-drag-item').forEach(el => el.classList.remove('drag-over'));
+      if (i !== dragIdx) item.classList.add('drag-over');
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragIdx === null || dragIdx === i) return;
+      const [moved] = galleryItems.splice(dragIdx, 1);
+      galleryItems.splice(i, 0, moved);
+      dragIdx = null;
       renderGalleryAdmin();
     });
   });
