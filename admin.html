@@ -511,6 +511,23 @@
 const SUPABASE_URL  = 'https://iteskszntcqpmekygwia.supabase.co';
 const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0ZXNrc3pudGNxcG1la3lnd2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjYxNTAsImV4cCI6MjA5NjEwMjE1MH0.qFgamuHtaVocusHD4XW2WKRPEh8nisl0v1bMJnnCzKo';
 const HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+const STORAGE_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+
+// Upload a File object to Supabase Storage and return its public URL
+async function uploadToStorage(file, bucket = 'media') {
+  const ext  = file.name.split('.').pop() || 'jpg';
+  const path = `uploads/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const res  = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+    method: 'POST',
+    headers: { ...STORAGE_HEADERS, 'Content-Type': file.type, 'x-upsert': 'true' },
+    body: file,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Storage upload failed: ${err}`);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+}
 
 // ── SUPABASE HELPERS ─────────────────────────────────────────
 async function dbGet(key) {
@@ -677,11 +694,14 @@ function bindActions() {
     document.getElementById('heroLogoField').style.display = this.value === 'logo' ? 'block' : 'none';
   });
 
-  document.getElementById('heroLogoFile')?.addEventListener('change', function() {
+  document.getElementById('heroLogoFile')?.addEventListener('change', async function() {
     const file = this.files[0]; if (!file) return;
-    const r = new FileReader();
-    r.onload = async () => { await dbSet('logoDataUrl', r.result); showToast('Logo uploaded ✓'); };
-    r.readAsDataURL(file);
+    showToast('Uploading logo…', 'rgba(26,106,255,0.85)');
+    try {
+      const url = await uploadToStorage(file);
+      document.getElementById('heroLogoUrl').value = url;
+      showToast('Logo uploaded ✓');
+    } catch(e) { showToast('Upload failed: ' + e.message, 'rgba(200,0,0,0.85)'); }
   });
 
   document.getElementById('heroVideoFile')?.addEventListener('change', function() {
@@ -689,26 +709,35 @@ function bindActions() {
     showToast('Video selected — save URL below for permanent use');
   });
 
-  document.getElementById('bioPhotoFile')?.addEventListener('change', function() {
+  document.getElementById('bioPhotoFile')?.addEventListener('change', async function() {
     const file = this.files[0]; if (!file) return;
-    const r = new FileReader();
-    r.onload = async () => { await dbSet('bioPhotoDataUrl', r.result); showToast('Photo uploaded ✓'); };
-    r.readAsDataURL(file);
+    showToast('Uploading photo…', 'rgba(26,106,255,0.85)');
+    try {
+      const url = await uploadToStorage(file);
+      const urlEl = document.getElementById('bioPhotoUrl');
+      if (urlEl) urlEl.value = url;
+      showToast('Photo uploaded ✓');
+    } catch(e) { showToast('Upload failed: ' + e.message, 'rgba(200,0,0,0.85)'); }
   });
 
-  document.getElementById('galleryUploadFile')?.addEventListener('change', function() {
-    [...this.files].forEach(file => {
-      const r = new FileReader();
-      r.onload = () => {
-        const cat = document.getElementById('galleryNewCat')?.value || 'promo';
-        const cap = document.getElementById('galleryNewCaption')?.value || file.name.replace(/\.[^.]+$/, '');
-        galleryItems.push({ url: r.result, caption: cap, cat });
+  document.getElementById('galleryUploadFile')?.addEventListener('change', async function() {
+    const files = [...this.files]; if (!files.length) return;
+    const cat = document.getElementById('galleryNewCat')?.value || 'promo';
+    const capField = document.getElementById('galleryNewCaption');
+    showToast(`Uploading ${files.length} photo(s)…`, 'rgba(26,106,255,0.85)');
+    let uploaded = 0;
+    for (const file of files) {
+      try {
+        const url = await uploadToStorage(file);
+        const cap = capField?.value || file.name.replace(/\.[^.]+$/, '');
+        galleryItems.push({ url, caption: cap, cat });
+        uploaded++;
         renderGalleryAdmin();
-        showToast('Photo added — click Save All to keep it ✓');
-      };
-      r.readAsDataURL(file);
-    });
+      } catch(e) { showToast('Upload failed: ' + e.message, 'rgba(200,0,0,0.85)'); }
+    }
+    if (uploaded) showToast(`${uploaded} photo(s) uploaded — click Save All ✓`);
     this.value = '';
+    if (capField) capField.value = '';
   });
 
   document.getElementById('addGalleryUrlBtn')?.addEventListener('click', () => {
@@ -940,16 +969,18 @@ function renderAlbumsAdmin() {
   });
 
   list.querySelectorAll('[data-alb-art]').forEach(fileInput => {
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener('change', async () => {
       const i = parseInt(fileInput.dataset.albArt);
       const file = fileInput.files[0]; if (!file) return;
-      const r = new FileReader();
-      r.onload = async () => {
-        albums[i].artUrl = r.result;
-        await dbSet('albumArt_' + i, r.result);
-        showToast('Art uploaded ✓');
-      };
-      r.readAsDataURL(file);
+      showToast('Uploading album art…', 'rgba(26,106,255,0.85)');
+      try {
+        const url = await uploadToStorage(file);
+        albums[i].artUrl = url;
+        // Update the URL field in the admin UI too
+        const urlInput = fileInput.closest('.field-row')?.querySelector('[data-f="artUrl"]');
+        if (urlInput) urlInput.value = url;
+        showToast('Album art uploaded ✓');
+      } catch(e) { showToast('Upload failed: ' + e.message, 'rgba(200,0,0,0.85)'); }
     });
   });
 
@@ -1028,17 +1059,17 @@ function renderEventsAdmin() {
 
   // Poster file upload
   document.querySelectorAll('[data-ev-poster]').forEach(fileInput => {
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener('change', async () => {
       const t = fileInput.dataset.evPoster, i = parseInt(fileInput.dataset.pi);
       const file = fileInput.files[0]; if (!file) return;
-      const r = new FileReader();
-      r.onload = () => {
+      showToast('Uploading poster…', 'rgba(26,106,255,0.85)');
+      try {
+        const url = await uploadToStorage(file);
         const arr = t === 'upcoming' ? upcomingEvents : pastEvents;
-        arr[i].posterUrl = r.result;
+        arr[i].posterUrl = url;
         renderEventsAdmin();
         showToast('Poster uploaded ✓');
-      };
-      r.readAsDataURL(file);
+      } catch(e) { showToast('Upload failed: ' + e.message, 'rgba(200,0,0,0.85)'); }
     });
   });
 
